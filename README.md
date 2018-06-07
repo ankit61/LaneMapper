@@ -6,7 +6,7 @@ This is a modified C++ implementation of the evaluation scripts of ICNet. The mo
 Follow this [link](https://docs.google.com/document/d/1uUK2KlghsdwMjtY23_JpbfzuyQkcQpRKAetClIWvc_8/edit?usp=sharing)
 
 ## Results
-Follow this [link](https://drive.google.com/file/d/1us5OziQ2dj6nIG82heIxvsHHm4zW9fUx/view?usp=sharing)
+Follow this [link](https://drive.google.com/drive/u/1/folders/1-mXBFJHg66TRby6LlQW1K3rw8hQB9qRd)
 
 ## Questions
 
