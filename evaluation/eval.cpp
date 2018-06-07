@@ -24,7 +24,7 @@ class eval {
 		int originalW, originalH;
 		string imgBaseName;
 		string modelWeightFile, modelDeployFile;
-		string dataFile, saveRoot, dataRoot;
+		string dataFile, segmentedRoot, dataRoot, overlayedRoot;
 		shared_ptr<Net<float> > net;
 		cv::Mat colormap;
 		void preprocess(cv::Mat& img, vector<cv::Mat>* inputChannels);
@@ -33,12 +33,12 @@ class eval {
 		void wrapInputLayer(vector<cv::Mat>* inputChannels);
 
 	public:
-		eval(string argv0, string argv1, string argv2);
+		eval(string argv1, string argv2, string argv3, string argv4);
 		void run();
 
 };
 
-eval::eval(string argv1, string argv2, string argv3) {
+eval::eval(string argv1, string argv2, string argv3, string argv4) {
 	//initializes all data
 	#ifdef DEBUG
 		inDebug = true;
@@ -47,7 +47,7 @@ eval::eval(string argv1, string argv2, string argv3) {
 	#endif
 	if(inDebug)
 		cout << "Entered eval::eval()" << endl;
-	dataRoot = argv1, dataFile = argv2, saveRoot = argv3;
+	dataRoot = argv1, dataFile = argv2, segmentedRoot = argv3, overlayedRoot = argv4;
 	cropSizeH = 1025, cropSizeW = 2049;
 	meanR = 123.68, meanG = 116.779, meanB = 103.939;
 	labels = {"road", "sidewalk", "building", "wall", "fence", "pole", "traffic light", "traffic sign", "vegetation", "terrain", "sky", "person", "rider", "car", "truck", "bus", "train", "motorcycle", "bicycle"};
@@ -74,9 +74,9 @@ void eval::run() {
 	string line, imgbaseName;
 	vector<cv::Mat> inputChannels(3, cv::Mat(cv::Size(cropSizeW, cropSizeH), CV_32FC3));
 	wrapInputLayer(&inputChannels);
-	while(std::getline(fin, line)) {
+	while(fin && std::getline(fin, line)) {
 		imgBaseName = string(basename(const_cast<char*>(line.c_str())));
-		cv::Mat inputImg = cv::imread(line), segmentedImg, img;
+		cv::Mat inputImg = cv::imread(dataRoot + "/" + line), segmentedImg, img;
 		inputImg.convertTo(img, CV_32FC3);
 		CHECK(!img.empty()) << "could not open or find " << line;
 		if(inDebug)
@@ -177,7 +177,7 @@ void eval::save(cv::Mat& inputImg, cv::Mat& segmentedImg) {
 	cv::LUT(segmentedImg, colormap, segmentedImg);
 	string segImgName = "segmented_" + imgBaseName;
 	vector<cv::Mat> channels;
-	cv::Mat empty(cv::Size(segmentedImg.cols, segmentedImg.rows), CV_8UC1);
+	cv::Mat empty = cv::Mat::zeros(segmentedImg.rows, segmentedImg.cols, CV_8UC1);
 	channels.push_back(empty);
 	channels.push_back(empty);
 	segmentedImg.convertTo(segmentedImg, CV_8UC1);
@@ -188,27 +188,27 @@ void eval::save(cv::Mat& inputImg, cv::Mat& segmentedImg) {
 		cout << "Segmented image(rows, columns, channels, depth): " << segmentedImg.rows << " " << segmentedImg.cols << " " << segmentedImg.channels() << " " << segmentedImg.depth() << endl;
 	}
 	cv::merge(channels, segmentedImg);
-	imwrite(saveRoot + "/" +  segImgName, segmentedImg);
+	imwrite(segmentedRoot + "/" +  segImgName, segmentedImg);
 	if(inDebug)
-		cout << "Image " << segImgName << "saved in " << saveRoot << endl;
+		cout << "Image " << segImgName << "saved in " << segmentedRoot << endl;
 
 	//create overlay
 	cv::Mat overlayed;
 	string overlayedImgName = "overlayed_" + imgBaseName;
 	cv::addWeighted(segmentedImg, 0.5, inputImg, 0.5, 0.0, overlayed);
-	imwrite(saveRoot + "/" +  overlayedImgName, overlayed);
+	imwrite(overlayedRoot + "/" +  overlayedImgName, overlayed);
 	if(inDebug) {
-		cout << "Image " << overlayedImgName << "saved in " << saveRoot << endl;
+		cout << "Image " << overlayedImgName << "saved in " << overlayedRoot << endl;
 		cout << "Exiting eval::save()" << endl;
 	}
 }
 
 int main(int argc, char* argv[]) {
-	if(argc != 4) {
-		cout << "3 additional command line arguments expected: root of directory where all images to segment are stored, name of file which lists relative paths of all images to be segmented, directory where results should be stored" << endl;
+	if(argc != 5) {
+		cout << "4 additional command line arguments expected: root of directory where all images to segment are stored, name of file which lists relative paths of all images to be segmented, directory where segmented images should be stored and directory where overlayed images should be stored" << endl;
 		return 1;
 	}
 	::google::InitGoogleLogging(argv[0]);
-	eval e = eval(string(argv[1]), string(argv[2]), string(argv[3]));
+	eval e = eval(string(argv[1]), string(argv[2]), string(argv[3]), string(argv[4]));
 	e.run();
 }
