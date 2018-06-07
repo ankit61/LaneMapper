@@ -1,3 +1,3 @@
 [submodule "PSPNet"]
 	path = PSPNet
-	url = ./PSPNet/
+	url = https://github.com/hszhao/PSPNet/tree/4b53f1c97a5921a99a965a60c0940eec2d46bb06
