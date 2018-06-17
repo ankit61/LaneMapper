@@ -5,7 +5,13 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 	if(argc != 7) {
-		cout << "Expecting 6 args" << endl;
+		cout << "Expecting 6 args: " << endl;
+		cout << "directory-where-images-are-stored" << endl;
+		cout << "file-with-relative-paths-to-images" << endl;
+		cout << "directory-where-segmented-results-are-stored" << endl;
+		cout << "directory-where-velodyne-points-are-stored" << endl;
+		cout << "directory-where-calibration-files-are-stored" << endl;
+		cout << "directory-where-output-should-be-saved" << endl;
 		return -1;
 	}
 	
