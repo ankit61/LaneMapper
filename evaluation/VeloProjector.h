@@ -44,7 +44,7 @@ class VeloProjector {
 	public:
 
 
-		VeloProjector(string _img_root, string _data_file, string _seg_root, string _velo_root, string _calib_root, string _output_root, int _ret_frequency = 1, double _min_x = 5);
+		VeloProjector(string _img_root, string _data_file, string _seg_root, string _velo_root, string _calib_root, string _output_root, int _ret_frequency = 5, double _min_x = 5);
 		
 		void Run();
 		
