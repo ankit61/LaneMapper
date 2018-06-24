@@ -1,6 +1,6 @@
 CC = g++
 
-CFLAGS = -Wall -g -Wno-sign-compare -MMD -MP -pthread -fPIC -O2 -MD 
+CFLAGS = -Wall -g -Wno-sign-compare -MMD -MP -pthread -fPIC -O2 -MD -Wreturn-type
 
 PYTHON_INCLUDES = -I/usr/include/python2.7 -I/usr/lib/python2.7/dist-packages/numpy/core/include 
 

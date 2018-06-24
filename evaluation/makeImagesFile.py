@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #This script provides a very handy way to put image names into a file.
 #It takes two inputs the directory which stores all images whose names you want to be put in a file and the name of file where these image names should be put.
 #It assumes all files in the first directory are images only. By trivial changes, you can force it to only put relevant images
