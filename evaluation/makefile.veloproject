@@ -10,6 +10,8 @@ SRCS = VeloProjector.cpp VeloProject.cpp CalibDataLoader.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
+INCLUDES = -I/usr/include/eigen3
+
 MAIN = VeloProject
 
 .PHONY:	depend
@@ -17,10 +19,10 @@ MAIN = VeloProject
 all:	$(MAIN)
 
 $(MAIN): $(OBJS)
-		$(CC) $(CFLAGS) -o $(MAIN) $(OBJS) $(LIBS)
+		$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJS) $(LIBS)
 
-%.o : %.cpp
-		$(CC) $(CFLAGS)  $(DEFINES) -c $<  -o $@ #Generates .o files from .cpp files
+%.o : %.cpp  #Generates .o files from .cpp files
+		$(CC) $(CFLAGS)  $(DEFINES) $(INCLUDES) -c $<  -o $@
 
 depend: $(SRCS)
 		makedepend $(INCLUDES) $^
