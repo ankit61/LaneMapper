@@ -17,7 +17,7 @@ Segmenter::Segmenter(string _argv1, string _argv2, string _argv3, string _argv4)
 	mean_r_ = 123.68, mean_g_ = 116.779, mean_b_ = 103.939;
 	labels_ = {"road", "sidewalk", "building", "wall", "fence", "pole", "traffic light", "traffic sign", "vegetation", "terrain", "sky", "person", "rider", "car", "truck", "bus", "train", "motorcycle", "bicycle"};
 	deploy_file_ = "prototxt/icnet_cityscapes.prototxt";
-	weights_file_ = "model/icnet_cityscapes_trainval_90k.caffemodel";
+	weights_file_ = "model/icnet_cityscapes_train_30k.caffemodel";
 	
 	Caffe::set_mode(Caffe::CPU);
 	net_.reset(new Net<float>(deploy_file_, TEST));
@@ -171,6 +171,7 @@ void Segmenter::Save(cv::Mat& _input_img, cv::Mat& _segmented_img) {
 	if(debug_)
 		cout << "The number of rows, columns, and depths must be the same for different matrices" << endl;
 	
+
 	imwrite(segmented_root_ + "/" +  segmented_img_name, _segmented_img);
 	
 	if(debug_)
@@ -191,6 +192,7 @@ void Segmenter::Save(cv::Mat& _input_img, cv::Mat& _segmented_img) {
 		cv::merge(channels, _segmented_img);
 
 		cv::addWeighted(_segmented_img, 0.5, _input_img, 0.5, 0.0, overlayed);
+	
 		imwrite(overlayed_root_ + "/" +  overlayed_img_name, overlayed);
 		
 		cout << "Image " << overlayed_img_name << "saved in " << overlayed_root_ << endl;		
