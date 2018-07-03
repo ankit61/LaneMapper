@@ -12,6 +12,7 @@
 #include<exception>
 #include<stdlib.h>
 #include "CalibDataLoader.h"
+#include<fstream>
 
 using namespace cv;
 using std::string;
@@ -25,6 +26,7 @@ class VeloProjector {
 		string img_root_;
 		string calib_root_;
 		string seg_root_;
+		string refined_root_;
 		string velo_root_;
 		string output_root_;
 		string data_file_;
@@ -37,8 +39,13 @@ class VeloProjector {
 		string velo_to_cam_file_;
 		string cam_to_cam_file_;
 		Mat reflectivity_;
+		std::ofstream pts_file3D_;
 
 		void ReadVeloData(string _bin_file);
+
+		void IntersectIn3D(const Eigen::MatrixXf _velo_img, const Mat& _seg_img, double _thresh, Mat _img = Mat());
+		
+		double OtsuThresholdRoad(const Eigen::MatrixXf _velo_img, const Mat& _seg_img);
 
 		void Project(const Eigen::MatrixXf& _P_velo_to_img, Eigen::MatrixXf& _velo_img);
 		
@@ -47,7 +54,7 @@ class VeloProjector {
 	public:
 
 
-		VeloProjector(string _img_root, string _data_file, string _seg_root, string _velo_root, string _calib_root, string _output_root, int _ret_frequency = 5, double _min_x = 5);
+		VeloProjector(string _img_root, string _data_file, string _seg_root, string _refined_root, string _velo_root, string _calib_root, string _output_root, int _ret_frequency = 5, double _min_x = 5);
 		
 		void Run();
 		
