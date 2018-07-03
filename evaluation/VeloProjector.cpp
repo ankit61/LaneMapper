@@ -41,7 +41,6 @@ bool isValid(long long int r, long long int c, long long int rows, long long int
 	return r >= 0 && c >= 0 && r < rows && c < cols;
 }
 
-
 void VeloProjector::Run() {
 	if(debug_)
 		cout << "Entering VeloProjector::Run() " << endl;
@@ -95,6 +94,9 @@ void VeloProjector::Run() {
 }
 
 void VeloProjector::IntersectIn3D(const Eigen::MatrixXf _velo_img, const Mat& _refined_img, double _thresh, Mat _img) {
+	if(debug_)
+		cout << "Entering VeloProjector::IntersectIn3D()" << endl;
+
 	for(int i = 0; i < _velo_img.rows(); i++) {
 		int x = _velo_img(i, 0), y = _velo_img(i, 1);
 		int reflect = reflectivity_.at<unsigned char>(i, 0);
@@ -106,9 +108,15 @@ void VeloProjector::IntersectIn3D(const Eigen::MatrixXf _velo_img, const Mat& _r
 		}
 	}
 	pts_file3D_.flush();
+	
+	if(debug_)
+		cout << "Exiting VeloProjector::IntersectIn3D()" << endl;
 }
 
 double VeloProjector::OtsuThresholdRoad(const Eigen::MatrixXf _velo_img, const Mat& _seg_img) {
+	if(debug_)
+		cout << "Entering VeloProjector::OtsuThresholdRoad()" << endl;
+	
 	//Find Otsu thresholding for points that are on road and have positive reflectivity
 	reflectivity_ = 255 * reflectivity_;
 	reflectivity_.convertTo(reflectivity_, CV_8UC1);
@@ -123,7 +131,12 @@ double VeloProjector::OtsuThresholdRoad(const Eigen::MatrixXf _velo_img, const M
 			on_road_ref.push_back(reflectivity_.at<unsigned char>(i, 0));
 	}
 
-	return threshold(on_road_ref, on_road_ref, 0, 255, THRESH_TOZERO | THRESH_OTSU);
+	double thresh = threshold(on_road_ref, on_road_ref, 0, 255, THRESH_TOZERO | THRESH_OTSU);
+
+	if(debug_)
+		cout << "Exiting VeloProjector::OtsuThresholdRoad()" << endl;
+
+	return thresh;
 }
 
 void VeloProjector::ReadVeloData(string _bin_file) {
