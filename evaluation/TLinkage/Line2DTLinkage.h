@@ -14,7 +14,7 @@ class Line2DTLinkage : public TLinkage {
 
 	virtual void FitModel(const ArrayXXf& _data, const ArrayXf& _clusters, ArrayXXf& _models, const int& noiseIndex = -1) override;
 
-	Line2DTLinkage() : TLinkage(2, 2) {}
+	Line2DTLinkage() : TLinkage(2, 3) {}
 };
 
 #endif
