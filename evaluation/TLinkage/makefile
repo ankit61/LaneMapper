@@ -1,26 +1,17 @@
-CC = g++
+.PHONY: clean
 
-CFLAGS = -Wall -g -Wno-sign-compare -MD -Wreturn-type
+Line: TLinkage.cpp TLinkage.h DemoLines.cpp Line2DLinkage.cpp Line2DLinkage.h
+	make -f makefile.lines
 
-SRCS = Demo.cpp TLinkage.cpp Line2DTLinkage.cpp
+Plane: TLinkage.cpp TLinkage.h DemoPlane.cpp PlaneTLinkage.cpp PlaneTLinkage.h
+	make -f makefile.planes
 
-OBJS = $(SRCS:.cpp=.o)
+Circle:	TLinkage.cpp TLinkage.h DemoCircle.cpp Circle2DTLinkage.cpp Circle2DTLinkage.h
+	make -f makefile.circles
 
-INCLUDES = -I/usr/include/eigen3
-
-MAIN = TLinkage
-
-.PHONY:	depend
-
-all:	$(MAIN)
-
-$(MAIN): $(OBJS)
-		$(CC) $(CFLAGS) $(INCLUDES) -o $(MAIN) $(OBJS)
-
-%.o : %.cpp  #Generates .o files from .cpp files
-		$(CC) $(CFLAGS)  $(DEFINES) $(INCLUDES) -c $<  -o $@
-
-depend: $(SRCS)
-		makedepend $(INCLUDES) $^
-
--include $(OBJS:.o=.d)
+clean:
+	$(RM) *.o
+	$(RM)  *.d
+	$(RM) Segment
+	$(RM) VeloProject
+	$(RM) Refine

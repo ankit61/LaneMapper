@@ -3,6 +3,8 @@
 
 //TODO: Use input from XML.  This is a very crude file and is meant for only testing purposes
 
+//The data is taken from the demo.m file of the official TLinkage code.  It is has points of a star
+
 int main() {
 	Line2DTLinkage t;
 	ArrayXXf data(2, 500), samples, hypotheses, residuals, pref;
@@ -24,7 +26,8 @@ int main() {
 //	cout << endl << endl << clusters << endl << endl;
 	t.RejectOutliers(clusters, clusters);
 //	cout << clusters << endl;
-	ArrayXXf models;
-	t.FitModel(data, clusters, models);
-//	cout << models << endl;
+	vector<ArrayXf> models;
+	t.FitModels(data, clusters, models);
+//	for(int i = 0; i < models.size(); i++)
+//		cout << models[i] << endl << endl;
 }
