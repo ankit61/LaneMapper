@@ -12,7 +12,7 @@ class Line2DTLinkage : public TLinkage {
 
 	virtual double Distance(ArrayXf _dataPoint, ArrayXf _model) override;
 
-	virtual void FitModel(const ArrayXXf& _data, const ArrayXf& _clusters, ArrayXXf& _models, const int& noiseIndex = -1) override;
+	virtual void FitModel(const ArrayXXf& _clusters, ArrayXf& _model) override;
 
 	Line2DTLinkage() : TLinkage(2, 3) {}
 };

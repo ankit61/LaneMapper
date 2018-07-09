@@ -3,6 +3,8 @@
 #include<cstdlib>
 #include<limits>
 
+//TODO: Make a Run function
+
 void TLinkage::SetSampler(SamplingMethod _method) {}
 
 void TLinkage::SetOutlierRejector(OutlierRejectionMethod _method) {}
@@ -138,7 +140,7 @@ void TLinkage::CalculateTanimotoDist(const ArrayXXf& _preferences, ArrayXXf& _di
 		for(ulli c = 0; c < _distances.cols(); c++) {
 			if(c <= r)
 				_distances(r, c) = std::numeric_limits<float>::max(); //so it's not min ever
-			else
+			else 
 				_distances(r, c) = Tanimoto(_preferences.col(r), _preferences.col(c));
 		}
 	}
@@ -164,4 +166,40 @@ void TLinkage::RejectOutliers(const ArrayXf& _clusters, ArrayXf& _out) {
 	
 	if(m_debug)
 		cout << "Exiting TLinkage::RejectOutliers()" << endl;
+}
+
+void TLinkage::FitModels(const ArrayXXf& _data, const ArrayXf& _clusters, vector<ArrayXf>& _models, const int& _noiseIndex) {
+	if(m_debug)
+		cout << "Entering TLinkage::FitModels()" << endl;
+	
+	vector<vector<float> > clusteredPoints;
+	std::unordered_map<long long int, ulli> clusterID2Index;
+	
+	for(ulli i = 0; i < _clusters.size(); i++) {
+		if(_clusters(i) != _noiseIndex) {
+			if(clusterID2Index.find(_clusters(i)) == clusterID2Index.end()) {
+				clusterID2Index[_clusters(i)] = clusteredPoints.size();
+				clusteredPoints.push_back(vector<float>());
+			}
+			for(ulli j = 0; j < _data.rows(); j++)
+				clusteredPoints[clusterID2Index[_clusters(i)]].push_back(_data(j, i));
+		}
+	}
+
+	if(m_debug)
+		cout << "Clubbed points of the same cluster" << endl;
+
+	vector<ArrayXXf> clusters(clusteredPoints.size());
+	_models.resize(clusteredPoints.size());
+
+	for(ulli i = 0; i < clusters.size(); i++) {
+	
+		clusters[i] = Map<Matrix<float, Dynamic, Dynamic, RowMajor>, Unaligned, OuterStride<> >(clusteredPoints[i].data(),
+						clusteredPoints[i].size() / _data.rows(), _data.rows(), 
+						OuterStride<>(_data.rows())).array(); //this is a deep copy
+		FitModel(clusters[i], _models[i]);
+	}
+
+	if(m_debug)
+		cout << "Exiting TLinkage::FitModels()" << endl;
 }

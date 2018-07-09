@@ -39,9 +39,11 @@ class TLinkage : public BaseLD {
 		virtual void GenerateHypothesis(const ArrayXXf& _data, 
 			const ArrayXXf& _sampleIndices, ArrayXXf& _hypotheses) = 0;
 
-		virtual void FitModel(const ArrayXXf& _data, const ArrayXf& _clusters, ArrayXXf& _models, const int& noiseIndex = -1) = 0;
+		virtual void FitModels(const ArrayXXf& _data, const ArrayXf& _clusters, vector<ArrayXf>& _models, const int& _noiseIndex = -1);
+
+		virtual void FitModel(const ArrayXXf& _clusteredPoints, ArrayXf& _model) = 0;
 		
-		virtual void FindResiduals(const ArrayXXf& _data, const ArrayXXf& _hypotheses, 
+		virtual void FindResiduals(const ArrayXXf& _data, const ArrayXXf& _hypotheses,
 			ArrayXXf& _residuals);
 
 		virtual void FindPreferences(const ArrayXXf& _residuals, 
