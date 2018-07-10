@@ -5,9 +5,19 @@
 
 //TODO: Make a Run function
 
-void TLinkage::SetSampler(SamplingMethod _method) {}
+void TLinkage::SetSampler(SamplingMethod _method) {
+	switch(_method) {
+		case PREFER_NEAR:
+			m_sampler = std::make_unique<DistBasedSampler>();
+			break;
+		case UNIFORM:
+			m_sampler = std::make_unique<UniformSampler>();
+			break;
+	}
+}
 
-void TLinkage::SetOutlierRejector(OutlierRejectionMethod _method) {}
+void TLinkage::SetOutlierRejector(OutlierRejectionMethod _method) {
+}
 
 void TLinkage::Sample(const ArrayXXf& _data, ArrayXXf& _sampleIndices, 
 	const unsigned long long int& _numSamples) {

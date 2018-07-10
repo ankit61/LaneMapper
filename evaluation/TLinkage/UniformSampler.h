@@ -7,12 +7,12 @@
 class UniformSampler : public Sampler {
 	public:
 		virtual void operator()(const ArrayXXf& _data, ArrayXXf& _sampleIndices, 
-			const ulli& _numSamples, const ulli& _minSamples) {
+			const ulli& _numSamples, const ulli& _minSamples) override {
 
 			if(m_debug)
 				cout << "Entering UniformSampler::operator() " << endl;
 
-			_sampleIndices = ArrayXXf(_minSamples, _numSamples);
+			_sampleIndices.resize(_minSamples, _numSamples);
 
 			for(ulli i = 0; i < _numSamples; i++) {
 				_sampleIndices(0, i) = i % _data.cols();

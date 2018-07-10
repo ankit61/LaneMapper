@@ -3,10 +3,11 @@
 
 #include"BaseLD.h"
 #include"Sampler.h"
+#include"DistBasedSampler.h"
 #include"OutlierRejector.h"
+#include"UniformSampler.h"
 #include<Eigen/Dense>
 #include<memory>
-#include"UniformSampler.h"
 #include"MaxDiffOR.h"
 
 using namespace Eigen;
@@ -16,6 +17,10 @@ using namespace Eigen;
 class TLinkage : public BaseLD {
 	public:
 
+		enum SamplingMethod {
+			UNIFORM,
+			PREFER_NEAR,
+		};
 		enum VotingScheme {
 			EXP,
 			GAUSS,
@@ -23,11 +28,6 @@ class TLinkage : public BaseLD {
 			TUKEY
 		};
 
-		enum SamplingMethod {
-			UNIFORM,
-			PREFER_NEAR,
-			NORMAL,
-		};
 
 		enum OutlierRejectionMethod {
 			MAX_SIZE_CHANGE

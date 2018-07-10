@@ -39,11 +39,6 @@ void PlaneTLinkage::FitModel(const ArrayXXf& _cluster, ArrayXf& _model) {
 	ulli minEigenValueIndex;
 	solver.eigenvalues().real().array().minCoeff(&minEigenValueIndex); //eigen values will be real as matrix is symmetric
 	_model = ArrayXf(m_modelParams);
-	cout << solver.eigenvectors().col(minEigenValueIndex).real() << endl;
-	cout << "here" << endl;
-	cout << solver.eigenvectors().col(minEigenValueIndex).real().rows() << "\t" << 
-	solver.eigenvectors().col(minEigenValueIndex).real().rows() << endl;
-	cout << "here" << endl;
 	_model.head(3) = solver.eigenvectors().col(minEigenValueIndex).real();
 	_model.head(3).matrix().normalize();
 	_model(3) = - _model.head(3).matrix().dot(means.matrix());

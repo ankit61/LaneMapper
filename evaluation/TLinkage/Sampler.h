@@ -11,7 +11,7 @@ class Sampler : public BaseLD {
 		virtual void operator()(const ArrayXXf& _data, ArrayXXf& _sampleIndices, 
 			const ulli& _numSamples, const ulli& _minSamples) = 0;
 
-		virtual void ParseXML() {}
+		virtual void ParseXML() override {}
 };
 
 #endif

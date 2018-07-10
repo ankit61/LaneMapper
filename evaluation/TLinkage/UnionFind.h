@@ -1,3 +1,5 @@
+#ifndef UNION_FIND_H_
+#define UNION_FIND_H_
 #include<vector>
 
 class UnionFind {
@@ -28,3 +30,5 @@ class UnionFind {
 			} 
 		} 
 };
+
+#endif
