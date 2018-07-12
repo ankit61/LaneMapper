@@ -3,18 +3,22 @@
 
 #include"TLinkage.h"
 
-class PlaneTLinkage : public TLinkage {
+namespace LD {
 
-	public:
+	class PlaneTLinkage : public TLinkage {
 
-	virtual void GenerateHypothesis(const ArrayXXf& _data, 
-		const ArrayXXf& _sampleIndices, ArrayXXf& _hypotheses) override;
+		public:
 
-	virtual double Distance(ArrayXf _dataPoint, ArrayXf _model) override;
+			virtual void GenerateHypothesis(const ArrayXXf& _data, 
+					const ArrayXXf& _sampleIndices, ArrayXXf& _hypotheses) override;
 
-	virtual void FitModel(const ArrayXXf& _cluster, ArrayXf& _models) override;
+			virtual double Distance(ArrayXf _dataPoint, ArrayXf _model) override;
 
-	PlaneTLinkage() : TLinkage(3, 4) {}
-};
+			virtual void FitModel(const ArrayXXf& _cluster, ArrayXf& _models) override;
+
+			PlaneTLinkage(string _xmlFile) : TLinkage(3, 4, _xmlFile) {}
+	};
+
+}
 
 #endif

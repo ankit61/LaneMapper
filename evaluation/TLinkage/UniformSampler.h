@@ -4,29 +4,39 @@
 #include "Sampler.h"
 #include<unordered_set>
 
-class UniformSampler : public Sampler {
-	public:
-		virtual void operator()(const ArrayXXf& _data, ArrayXXf& _sampleIndices, 
-			const ulli& _numSamples, const ulli& _minSamples) override {
+namespace LD {
 
-			if(m_debug)
-				cout << "Entering UniformSampler::operator() " << endl;
+	class UniformSampler : public Sampler {
+		public:
+			virtual void operator()(const ArrayXXf& _data, ArrayXXf& _sampleIndices, 
+				const ulli& _numSamples, const ulli& _minSamples) override {
 
-			_sampleIndices.resize(_minSamples, _numSamples);
+				if(m_debug)
+					cout << "Entering UniformSampler::operator() " << endl;
 
-			for(ulli i = 0; i < _numSamples; i++) {
-				_sampleIndices(0, i) = i % _data.cols();
-				std::unordered_set<ulli> uniques;
-				uniques.insert(_sampleIndices(0,i));
-				while(uniques.size() != _minSamples) {
-					_sampleIndices(uniques.size(), i) = rand() % _data.cols();
-					uniques.insert(_sampleIndices(uniques.size(), i));
+				_sampleIndices.resize(_minSamples, _numSamples);
+
+				for(ulli i = 0; i < _numSamples; i++) {
+					_sampleIndices(0, i) = i % _data.cols();
+					std::unordered_set<ulli> uniques;
+					uniques.insert(_sampleIndices(0,i));
+					while(uniques.size() != _minSamples) {
+						_sampleIndices(uniques.size(), i) = rand() % _data.cols();
+						uniques.insert(_sampleIndices(uniques.size(), i));
+					}
 				}
+
+				if(m_debug)
+					cout << "Exiting UniformSampler::operator() " << endl;
 			}
 
-			if(m_debug)
-				cout << "Exiting UniformSampler::operator() " << endl;
-		}
-};
+			virtual void ParseXML() override {
+				m_xml = m_xml.child("Uniform");
+			}
+
+			UniformSampler(string _xmlFile) : Sampler(_xmlFile) { ParseXML(); }		
+	};
+
+}
 
 #endif

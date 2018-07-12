@@ -3,18 +3,21 @@
 
 #include"TLinkage.h"
 
-class Line2DTLinkage : public TLinkage {
+namespace LD {
 
-	public:
+	class Line2DTLinkage : public TLinkage {
 
-	virtual void GenerateHypothesis(const ArrayXXf& _data, 
-		const ArrayXXf& _sampleIndices, ArrayXXf& _hypotheses) override;
+		public:
 
-	virtual double Distance(ArrayXf _dataPoint, ArrayXf _model) override;
+			virtual void GenerateHypothesis(const ArrayXXf& _data, 
+					const ArrayXXf& _sampleIndices, ArrayXXf& _hypotheses) override;
 
-	virtual void FitModel(const ArrayXXf& _clusters, ArrayXf& _model) override;
+			virtual double Distance(ArrayXf _dataPoint, ArrayXf _model) override;
 
-	Line2DTLinkage() : TLinkage(2, 3) {}
-};
+			virtual void FitModel(const ArrayXXf& _clusters, ArrayXf& _model) override;
 
+			Line2DTLinkage(string _xmlFile) : TLinkage(2, 3, _xmlFile) {}
+	};
+
+}
 #endif

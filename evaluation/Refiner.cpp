@@ -8,123 +8,97 @@
 #include<fstream>
 #include<stdlib.h>
 
-using namespace cv;
-	
-Refiner::Refiner(string _data_root, string _data_file, string _seg_root, string _refined_root) {
-	#ifdef DEBUG
-		debug_ = true;
-	#else
-		debug_ = false;
-	#endif
+namespace LD {
 
-	if(debug_)
-		cout << "Entering Refiner::Refiner()" << endl;
-
-	data_root_ = _data_root;
-	data_file_ = _data_file;
-	seg_root_ = _seg_root;
-	refined_root_ = _refined_root;
-	stat_file_stream_ = std::ofstream(refined_root_ + "/stats.csv");
-	namedWindow( "show", WINDOW_NORMAL );
-	if(debug_)
-		cout << "Exiting Refiner::Refiner()" << endl;
-}
-
-void Refiner::Run() {
-
-	if(debug_)
-		cout << "Entering Refiner::Run()" << endl;
-
-	std::ifstream fin(data_file_.c_str());
-	string line;
-
-	while(std::getline(fin, line)) {
+	using namespace cv;
 		
-		img_base_name_ = string(basename(const_cast<char*>(line.c_str())));
-		string fullImgName = data_root_ + "/" + line, fullSegName = seg_root_ + "/segmented_" + line; 
-		string overlayed_name = refined_root_ + "/overlayed_" + img_base_name_;
-		Mat original = imread(fullImgName);
-		Mat img, overlayed;
-		cvtColor(original, img, COLOR_RGB2GRAY);
+	Refiner::Refiner(string _xmlFile) : Solver(_xmlFile) {
 
-		Mat seg_img = imread(fullSegName, IMREAD_GRAYSCALE);
-		Mat thresholded_img;
-		if(img.empty()) { 
-			cout << "could not open or find " << fullImgName << endl;
-			exit(1);
-		}
-		if(seg_img.empty()) {
-			cout << "could not open or find " << fullSegName << endl;
-			exit(1);
-		}
+		if(m_debug)
+			cout << "Entering Refiner::Refiner()" << endl;
 
-		if(debug_)
-			cout << "Successfully opened " << fullImgName << " and " << fullSegName << endl;
-		
-//		morphologyEx(seg_img, seg_img, MORPH_CLOSE, getStructuringElement(MORPH_RECT, Size(7,7)));
-//		morphologyEx(seg_img, seg_img, MORPH_DILATE, getStructuringElement(MORPH_RECT, Size(3,3)));
-		bitwise_and(img, seg_img, img);
-		ThresholdImage(img, thresholded_img);
-		bitwise_and(img, thresholded_img, thresholded_img);
-
-		Mat regions;
-		vector<Mat> channels;
-		channels.push_back(Mat::zeros(thresholded_img.size(), CV_8U));
-		channels.push_back(Mat::zeros(thresholded_img.size(), CV_8U));
-		channels.push_back(thresholded_img);
-		merge(channels, regions);
-		addWeighted(regions, 0.5, original, 0.5, 0, overlayed);
-
-		imwrite(overlayed_name, overlayed);
-		
-		if(debug_)
-			cout << "Saving " << overlayed_name << endl;
-	
-	}
-	
-	if(debug_)
-		cout << "Exiting Refiner::Run()" << endl;
-}
-
-void Refiner::ThresholdImage(const Mat& _extracted_img,  Mat& _thresholded_img) {
-	if(debug_)
-		cout << "Entering Refiner::ThresholdImage()" << endl;
-	
-	Mat samples;
-	const unsigned char* p_img;
-
-	for(int r = 0; r < _extracted_img.rows; r++) {
-		p_img = _extracted_img.ptr<unsigned char>(r);
-		for(int c = 0; c < _extracted_img.cols; c++) {
-			if(p_img[c])
-				samples.push_back(p_img[c]); //keep only road pixels
-		}
+		ParseXML();
+		m_statFileStream = std::ofstream(m_refinedRoot + "/stats.csv");
+		namedWindow( "show", WINDOW_NORMAL );
+		if(m_debug)
+			cout << "Exiting Refiner::Refiner()" << endl;
 	}
 
-	Ptr<ml::EM> em_model = ml::EM::create();
-	em_model->setClustersNumber(3);
+	void Refiner::ParseXML() {
+		m_xml = m_xml.child("Refiner");
+		m_dataRoot = m_xml.child("SolverInstance").attribute("dataRoot").as_string();
+		m_dataFile = m_xml.child("SolverInstance").attribute("dataFile").as_string();
+		m_segRoot = m_xml.child("SolverInstance").attribute("segRoot").as_string();
+		m_refinedRoot = m_xml.child("SolverInstance").attribute("refinedRoot").as_string();
 
-	em_model->trainEM(samples);  //default mode involves 100 iterations
-
-	Mat means = em_model->getMeans();
-	vector<Mat> covs;
-	em_model->getCovs(covs);
-
-	Point max_pt;
-	double max_mean, max_std;
-	minMaxLoc(means, nullptr, &max_mean, nullptr, &max_pt);
-	max_std = std::sqrt(covs[max_pt.y].at<double>(0));
-	
-	double thresh = max_mean - 3 * max_std;
-
-	if(debug_) {
-		cout << "Maximum mean: " << max_mean << endl;
-		cout << "Corresponding standard deviation: " << max_std << endl;
-		cout << "Threshold set to " << thresh << endl;
+		if(m_dataRoot.empty() || m_dataFile.empty() || m_segRoot.empty() || m_refinedRoot.empty())
+			throw runtime_error("One of the following attributes are missing in SolverInstance node of Segmenter: dataRoot, dataFile, segRoot, refinedRoot");
 	}
 
-	threshold(_extracted_img, _thresholded_img, thresh, 255, THRESH_TOZERO);
+	void Refiner::Run() {
 
-	if(debug_) 
-		cout << "Exiting Refiner::ThresholdedImage()" << endl;
+		if(m_debug)
+			cout << "Entering Refiner::Run()" << endl;
+
+		std::ifstream fin(m_dataFile.c_str());
+		string line;
+
+		while(std::getline(fin, line)) {
+			
+			m_imgBaseName = string(basename(const_cast<char*>(line.c_str())));
+			string fullImgName = m_dataRoot + "/" + line, fullSegName = m_segRoot + "/segmented_" + line; 
+			string _overlayedName = m_refinedRoot + "/overlayed_" + m_imgBaseName;
+			Mat original = imread(fullImgName);
+			Mat img, overlayed;
+			cvtColor(original, img, COLOR_RGB2GRAY);
+
+			Mat segImg = imread(fullSegName, IMREAD_GRAYSCALE);
+			Mat thresholdedImg;
+			if(img.empty()) { 
+				cout << "could not open or find " << fullImgName << endl;
+				exit(1);
+			}
+			if(segImg.empty()) {
+				cout << "could not open or find " << fullSegName << endl;
+				exit(1);
+			}
+
+			if(m_debug)
+				cout << "Successfully opened " << fullImgName << " and " << fullSegName << endl;
+			
+	//		morphologyEx(segImg, segImg, MORPH_CLOSE, getStructuringElement(MORPH_RECT, Size(7,7)));
+	//		morphologyEx(segImg, segImg, MORPH_DILATE, getStructuringElement(MORPH_RECT, Size(3,3)));
+			bitwise_and(img, segImg, img);
+			ThresholdImage(img, thresholdedImg);
+			
+			bitwise_and(img, thresholdedImg, thresholdedImg);
+			Mat regions;
+			vector<Mat> channels;
+			channels.push_back(Mat::zeros(thresholdedImg.size(), CV_8U));
+			channels.push_back(Mat::zeros(thresholdedImg.size(), CV_8U));
+			channels.push_back(thresholdedImg);
+			merge(channels, regions);
+			addWeighted(regions, 0.5, original, 0.5, 0, overlayed);
+
+			imwrite(_overlayedName, overlayed);
+			
+			if(m_debug)
+				cout << "Saving " << _overlayedName << endl;
+		
+		}
+		
+		if(m_debug)
+			cout << "Exiting Refiner::Run()" << endl;
+	}
+
+	void Refiner::ThresholdImage(const Mat& _extractedImg,  Mat& _thresholdedImg) {
+		if(m_debug)
+			cout << "Entering Refiner::ThresholdImage()" << endl;
+		
+		threshold(_extractedImg, _thresholdedImg, 170, 255, THRESH_TOZERO);
+
+		if(m_debug) 
+			cout << "Exiting Refiner::ThresholdedImage()" << endl;
+	}
+
 }

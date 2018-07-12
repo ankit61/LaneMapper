@@ -24,59 +24,65 @@
 #include<algorithm>
 #include "FloodFill.h"
 
-using namespace cv;
-using std::string;
-using std::vector;
-using std::cout;
-using std::endl;
+#include"Solver.h"
 
-class Refiner {
-	private:
+namespace LD {
+
+	using namespace cv;
+	using std::string;
+	using std::vector;
+	using std::cout;
+	using std::endl;
+
+	class Refiner : public Solver {
+		protected:
+			
+			/**< directory which stores original images (not segmented)  */
+			string m_dataRoot;
+			
+			/**< name of file which stores relative paths of all original images to process */
+			string m_dataFile;
+			
+			/**< directory in which segmented images to refine are stored;
+				 segmentation results of original images must have "segmented_" prepended to their names
+				 Example: if uu_000000.png is name of original image, then segmented_uu_000000.png must be
+				 the name of its segmented version stored in segmented_root_    */
+			string m_segRoot;
+
+			/**< directory in which refined image results should be stored */
+			string m_refinedRoot;
+
+			/**< name of current image file being processed	*/
+			string m_imgBaseName;
+
+			/**< file stream of file where all stats would be stored*/
+			std::ofstream m_statFileStream;
+
+			/**
+			 * \brief fits the image to a gaussian and thresholds the image based upon its intensity values
+			 * \param _extractedImg image which is black except where there is road
+			 * \param _thresholdedImg stores output 
+			 */
+			void ThresholdImage(const Mat& _extractedImg, Mat& _thresholdedImg);
+
+			virtual void ParseXML() override;
+			
+			public:
+			/**
+			 * \brief initializes relevant member variables
+			 * \param _dataRoot root of directory where all original images are stored
+			 * \param _dataFile name of file which lists relative paths (to _dataRoot) of all images original images
+			 * \param _segRoot directory where segmented images are stored
+			 * \param _refinedRoot directory where refined images should be stored
+			 */
+			Refiner(string _xmlFile);
+
+
+			/** 
+			 * \brief coordinates calls to other member functions and saves the final input
+			 */
+			virtual void Run() override;
 		
-		/**< corresponds to debug mode; can be set during compilation by adding -DDEBUG */
-		bool debug_;
-		
-		/**< directory which stores original images (not segmented)  */
-		string data_root_;
-		
-		/**< name of file which stores relative paths of all original images to process */
-		string data_file_;
-		
-		/**< directory in which segmented images to refine are stored;
-		     segmentation results of original images must have "segmented_" prepended to their names
-			 Example: if uu_000000.png is name of original image, then segmented_uu_000000.png must be
-			 the name of its segmented version stored in segmented_root_    */
-		string seg_root_;
+	};
 
-		/**< directory in which refined image results should be stored */
-		string refined_root_;
-
-		/**< name of current image file being processed	*/
-		string img_base_name_;
-
-		/**< file stream of file where all stats would be stored*/
-		std::ofstream stat_file_stream_;
-
-		/**
-		 * \brief fits the image to a gaussian and thresholds the image based upon its intensity values
-		 * \param _input_img image which is black except where there is road
-		 * \param _thresholded_image stores output 
-		 */
-		void ThresholdImage(const Mat& _input_img, Mat& _thresholded_image);
-
-		public:
-		/**
-		 * \brief initializes relevant member variables
-		 * \param _data_root root of directory where all original images are stored
-		 * \param _data_file name of file which lists relative paths (to _data_root) of all images original images
-		 * \param _segmented_root directory where segmented images are stored
-		 * \param _refined_root directory where refined images should be stored
-		 */
-		Refiner(string _data_root, string _data_file, string _segemented_root, string _refined_root);
-
-		/** 
-		 * \brief coordinates calls to other member functions and saves the final input
-		 */
-		void Run();
-	
-};
+}

@@ -2,19 +2,20 @@
 #define CIRCLE_T_LINKAGE_H_
 
 #include"TLinkage.h"
+namespace LD {
+	
+	class Circle2DTLinkage : public TLinkage {
 
-class Circle2DTLinkage : public TLinkage {
+		public:
 
-	public:
+		virtual void GenerateHypothesis(const ArrayXXf& _data, 
+			const ArrayXXf& _sampleIndices, ArrayXXf& _hypotheses) override;
 
-	virtual void GenerateHypothesis(const ArrayXXf& _data, 
-		const ArrayXXf& _sampleIndices, ArrayXXf& _hypotheses) override;
+		virtual double Distance(ArrayXf _dataPoint, ArrayXf _model) override;
 
-	virtual double Distance(ArrayXf _dataPoint, ArrayXf _model) override;
+		virtual void FitModel(const ArrayXXf& _cluster, ArrayXf& _model) override;
 
-	virtual void FitModel(const ArrayXXf& _cluster, ArrayXf& _model) override;
-
-	Circle2DTLinkage() : TLinkage(3, 3) {}
-};
-
+		Circle2DTLinkage(string _xmlFile) : TLinkage(3, 3, _xmlFile) {}
+	};
+}
 #endif

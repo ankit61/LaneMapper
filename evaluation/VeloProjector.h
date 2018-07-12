@@ -14,48 +14,54 @@
 #include "CalibDataLoader.h"
 #include<fstream>
 
-using namespace cv;
-using std::string;
-using std::vector;
-using std::cout;
-using std::endl;
+#include"Solver.h"
 
-class VeloProjector {
-	private:
-		
-		string img_root_;
-		string calib_root_;
-		string seg_root_;
-		string refined_root_;
-		string velo_root_;
-		string output_root_;
-		string data_file_;
-		double min_x_;
-		int retention_frequency_;
-		int cam_num_;
-		bool debug_;
-		Mat velo_points_;
-		Eigen::MatrixXf P_rect_, Tr_, R_rect_;
-		string velo_to_cam_file_;
-		string cam_to_cam_file_;
-		Mat reflectivity_;
-		std::ofstream pts_file3D_;
+namespace LD {
 
-		void ReadVeloData(string _bin_file);
+	using namespace cv;
+	using std::string;
+	using std::vector;
+	using std::cout;
+	using std::endl;
 
-		void IntersectIn3D(const Eigen::MatrixXf _velo_img, const Mat& _seg_img, double _thresh, Mat _img = Mat());
-		
-		double OtsuThresholdRoad(const Eigen::MatrixXf _velo_img, const Mat& _seg_img);
+	class VeloProjector : public Solver {
+		private:
+			
+			string m_dataRoot;
+			string m_calibRoot;
+			string m_segRoot;
+			string m_refinedRoot;
+			string m_veloRoot;
+			string m_outputRoot;
+			string m_dataFile;
+			double m_minX;
+			int m_retentionFrequency;
+			int m_camNum;
+			Mat m_veloPoints;
+			Eigen::MatrixXf m_PRect, m_Tr, m_RRect;
+		//	string m_veloToCamFile;
+		//	string m_camToCamFile;
+			Mat m_reflectivity;
+			std::ofstream m_ptsFile3D;
 
-		void Project(const Eigen::MatrixXf& _P_velo_to_img, Eigen::MatrixXf& _velo_img);
-		
-		void ComputeProjMat(Eigen::MatrixXf& _P_velo_to_img);
-		
-	public:
+			void ReadVeloData(string _binFile);
 
+			void IntersectIn3D(const Eigen::MatrixXf _veloImg, const Mat& _segImg, double _thresh, Mat _img = Mat());
+			
+			double OtsuThresholdRoad(const Eigen::MatrixXf _veloImg, const Mat& _segImg);
 
-		VeloProjector(string _img_root, string _data_file, string _seg_root, string _refined_root, string _velo_root, string _calib_root, string _output_root, int _ret_frequency = 5, double _min_x = 5);
-		
-		void Run();
-		
-};
+			void Project(const Eigen::MatrixXf& _PVeloToImg, Eigen::MatrixXf& _veloImg);
+			
+			void ComputeProjMat(Eigen::MatrixXf& _PVeloToImg);
+			
+		public:
+
+			VeloProjector(string _xmlFile);
+
+			void ParseXML() override;
+			
+			virtual void Run() override;
+			
+	};
+
+}

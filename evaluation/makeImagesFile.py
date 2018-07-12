@@ -11,5 +11,3 @@ imageFile = open(sys.argv[2], 'w')
 for f in sorted(listdir(sys.argv[1])):
     if isfile(join(sys.argv[1], f)):
         imageFile.write(f + "\n")
-
-
