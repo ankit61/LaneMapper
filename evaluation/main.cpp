@@ -8,6 +8,7 @@
 #include"TLinkage/Line2DTLinkage.h"
 #include"TLinkage/PlaneTLinkage.h"
 #include"TLinkage/Circle2DTLinkage.h"
+#include"TLinkage/SurfaceTLinkage.h"
 
 #include<pugixml.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -41,6 +42,8 @@ int main(int argc, char* argv[]) {
 			solverPtr = std::make_unique<PlaneTLinkage>(argv[1]);
 		else if(boost::iequals(model, "Circle"))
 			solverPtr = std::make_unique<Circle2DTLinkage>(argv[1]);
+		else if(boost::iequals(model, "Surface"))
+			solverPtr = std::make_unique<SurfaceTLinkage>(argv[1]);
 		else
 			throw runtime_error("No such TLinkage model implemented: " + model);
 	}

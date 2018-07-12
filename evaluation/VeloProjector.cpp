@@ -52,9 +52,12 @@ namespace LD {
 		m_retentionFrequency = solverInstance.attribute("retentionFrequency").as_int();
 		m_camNum             = solverInstance.attribute("camNum").as_int(-1);
 		m_minX               = solverInstance.attribute("minX").as_int();
+		string outputFile	 = solverInstance.attribute("outputFile").as_string();
 
-		if(m_dataRoot.empty() || m_dataFile.empty() || m_segRoot.empty() || m_refinedRoot.empty() || m_veloRoot.empty() || m_calibRoot.empty() ||  m_outputRoot.empty() || !m_retentionFrequency || (m_camNum == -1) || !m_minX)
-			throw runtime_error("at least one of the following attributes are missing in SolverInstance node of VeloProject: dataRoot, dataFile, segRoot, refinedRoot, veloRoot, calibRoot, outputRoot, retentionFrequency, camNum, minX");
+		if(m_dataRoot.empty() || m_dataFile.empty() || m_segRoot.empty() || m_refinedRoot.empty() || m_veloRoot.empty() || m_calibRoot.empty() ||  m_outputRoot.empty() || !m_retentionFrequency || (m_camNum == -1) || !m_minX || outputFile.empty())
+			throw runtime_error("at least one of the following attributes are missing in SolverInstance node of VeloProject: dataRoot, dataFile, segRoot, refinedRoot, veloRoot, calibRoot, outputRoot, retentionFrequency, camNum, minX, outputFile");
+
+		m_ptsFile3D.open((m_outputRoot + "/" + outputFile).c_str());
 
 		if(m_debug)
 			cout << "Exiting VeloProjector::ParseXML()" << endl;

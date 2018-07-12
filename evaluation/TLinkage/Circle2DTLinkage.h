@@ -8,8 +8,7 @@ namespace LD {
 
 		public:
 
-		virtual void GenerateHypothesis(const ArrayXXf& _data, 
-			const ArrayXXf& _sampleIndices, ArrayXXf& _hypotheses) override;
+		virtual ArrayXf GenerateHypothesis(const vector<ArrayXf>& _samples) override;
 
 		virtual double Distance(ArrayXf _dataPoint, ArrayXf _model) override;
 

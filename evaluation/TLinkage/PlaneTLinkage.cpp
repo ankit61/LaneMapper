@@ -4,26 +4,20 @@
 
 namespace LD {
 
-	void PlaneTLinkage::GenerateHypothesis(const ArrayXXf& _data, const ArrayXXf& _sampleIndices, ArrayXXf& _hypotheses) {
+	ArrayXf PlaneTLinkage::GenerateHypothesis(const vector<ArrayXf>& _samples) {
 		if(m_debug)
 			cout << "Entering PlaneTLinkage::GenerateHypothesis()" << endl;
 		
-		_hypotheses = ArrayXXf(m_modelParams, _sampleIndices.cols()); 
+		ArrayXf hypothesis(m_modelParams); 
 
-		Array3f pt1, pt2, pt3;
-
-		for(ulli i = 0; i < _sampleIndices.cols(); i++) {
-			pt1 = _data.col(_sampleIndices(0, i));
-			pt2 = _data.col(_sampleIndices(1, i));
-			pt3 = _data.col(_sampleIndices(2, i));
-
-			_hypotheses.col(i).topRows(3).matrix() = (pt1 - pt2).matrix().cross((pt3 - pt1).matrix());
-			_hypotheses.col(i).topRows(3).matrix().normalize();
-			_hypotheses(3, i) = - _hypotheses(0, i) * pt1(0) - _hypotheses(1, i) * pt1(1) - _hypotheses(2, i) * pt1(2);
-		}
+		hypothesis.head(3).matrix() = (_samples[0].head<3>() - _samples[1].head<3>()).matrix().cross((_samples[2].head<3>() - _samples[0].head<3>()).matrix());
+		hypothesis.head(3).matrix().normalize();
+		hypothesis(3) = - hypothesis(0) * _samples[0](0) - hypothesis(1) * _samples[0](1) - hypothesis(2) * _samples[0](2);
 
 		if(m_debug)
 			cout << "Exiting PlaneTLinkage::GenerateHypothesis()" << endl;
+
+		return hypothesis;
 	}
 
 	double PlaneTLinkage::Distance(ArrayXf _dataPoint, ArrayXf _model) {

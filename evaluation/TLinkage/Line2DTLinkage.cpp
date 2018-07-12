@@ -2,26 +2,20 @@
 
 namespace LD {
 
-	void Line2DTLinkage::GenerateHypothesis(const ArrayXXf& _data, 
-			const ArrayXXf& _sampleIndices, ArrayXXf& _hypotheses) {
+	ArrayXf Line2DTLinkage::GenerateHypothesis(const vector<ArrayXf>& _samples) {
 		if(m_debug)
 			cout << "Entering Line2DTLinkage::GenerateHypothesis()" << endl;
 
-		_hypotheses = ArrayXXf(m_modelParams, _sampleIndices.cols()); 
+		ArrayXf hypothesis(m_modelParams); 
 
-		Array2f pt1, pt2;
-
-		for(ulli i = 0; i < _sampleIndices.cols(); i++) {
-			pt1 = _data.col(_sampleIndices(0, i));
-			pt2 = _data.col(_sampleIndices(1, i));
-
-			_hypotheses(0, i) = pt1(1) - pt2(1); //y1 - pt2(1)
-			_hypotheses(1, i) = pt2(0) - pt1(0); //pt2(0) - x1
-			_hypotheses(2, i) = (pt1(0) - pt2(0)) * pt1(1) + (pt2(1) - pt1(1)) * pt1(0);
-		}
-
+		hypothesis(0) = _samples[0](1) - _samples[1](1); //y1 - _samples[1](1)
+		hypothesis(1) = _samples[1](0) - _samples[0](0); //_samples[1](0) - x1
+		hypothesis(2) = (_samples[0](0) - _samples[1](0)) * _samples[0](1) + (_samples[1](1) - _samples[0](1)) * _samples[0](0);
+		
 		if(m_debug)
 			cout << "Exiting Line2DTLinkage::GenerateHypothesis()" << endl;
+
+		return hypothesis;
 	}
 
 	double Line2DTLinkage::Distance(ArrayXf _dataPoint, ArrayXf _model) {
