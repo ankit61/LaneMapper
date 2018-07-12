@@ -47,7 +47,6 @@ add_executable(
 	main.cpp 
 	Segmenter.cpp 
 	Refiner.cpp 
-	CalibDataLoader.cpp
 	VeloProjector.cpp 
 	TLinkage/TLinkage.cpp
 	TLinkage/Line2DTLinkage.cpp

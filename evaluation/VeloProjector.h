@@ -39,8 +39,7 @@ namespace LD {
 			int m_camNum;
 			Mat m_veloPoints;
 			Eigen::MatrixXf m_PRect, m_Tr, m_RRect;
-		//	string m_veloToCamFile;
-		//	string m_camToCamFile;
+			CalibDataLoader m_calibDataLoader;
 			Mat m_reflectivity;
 			std::ofstream m_ptsFile3D;
 

@@ -8,15 +8,48 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<Eigen/Dense>
+#include"BaseLD.h"
 
-using std::string;
+namespace LD {
 
-class CalibDataLoader {
-	private:
-		CalibDataLoader() {}
-	
-	public: 
+	class CalibDataLoader : BaseLD {
+		protected:
+
+			virtual void ParseXML() {}
 		
-		static bool ReadVariable(string _file, string _variable_name, int _rows, int _cols, Eigen::MatrixXf& output); 
-		//static std::vector<cv::Mat> ReadVariables(string _file, vector<string> _var_names, vector<cv::Size> _sizes);
-};
+		public: 
+			
+			CalibDataLoader(string _xmlFile) : BaseLD(_xmlFile) {}
+
+			bool ReadVariable(string _file, string _varName, int _rows, int _cols, Eigen::MatrixXf& _output) {
+				
+				if(m_debug)
+					cout << "Entering CalibDataLoader::ReadVariable()" << endl;
+				
+				FILE* stream = fopen(_file.c_str(), "r");
+				char word[80] = "";
+				while(!feof(stream) && !ferror(stream) && strcmp(word, (_varName + ":").c_str()) != 0)
+					fscanf(stream, "%s", word);
+				_output = Eigen::MatrixXf(_rows, _cols);
+
+				if(feof(stream))
+					return false;
+
+				for(int r = 0; r < _rows; r++) {
+					for(int c = 0; c < _cols; c++) {
+						if(ferror(stream))
+							return false;
+						fscanf(stream, "%f", &_output(r,c));
+					}
+				}
+				fclose(stream);
+
+				if(m_debug)
+					cout << "Exiting CalibDataLoader::ReadVariable()" << endl;
+
+				return true;
+
+			}; 
+	};
+
+}

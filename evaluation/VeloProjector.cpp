@@ -2,7 +2,7 @@
 
 namespace LD {
 
-	VeloProjector::VeloProjector(string _xmlFile) : Solver(_xmlFile) {
+	VeloProjector::VeloProjector(string _xmlFile) : Solver(_xmlFile), m_calibDataLoader(_xmlFile) {
 
 			if(m_debug)
 				cout << "Entering VeloProjector::VeloProjector() " << endl;
@@ -15,12 +15,12 @@ namespace LD {
 			
 			Eigen::MatrixXf R, T;
 			
-			isSuccess &= CalibDataLoader::ReadVariable(camCalibFile, "P_rect_0" + std::to_string(m_camNum), 3, 4, m_PRect) &&
+			isSuccess &= m_calibDataLoader.ReadVariable(camCalibFile, "P_rect_0" + std::to_string(m_camNum), 3, 4, m_PRect) &&
 			//TODO: Check correctness of using m_RRect00 instead of m_RRect + m_camNum?
 			//the results are same as MATLAB's KITTI code even with m_RRect00
-			CalibDataLoader::ReadVariable(camCalibFile, "R_rect_00", 3, 3, m_RRect) &&
-			CalibDataLoader::ReadVariable(veloCalibFile, "R", 3, 3, R) &&
-			CalibDataLoader::ReadVariable(veloCalibFile, "T", 3, 1, T);
+			m_calibDataLoader.ReadVariable(camCalibFile, "R_rect_00", 3, 3, m_RRect) &&
+			m_calibDataLoader.ReadVariable(veloCalibFile, "R", 3, 3, R) &&
+			m_calibDataLoader.ReadVariable(veloCalibFile, "T", 3, 1, T);
 			
 			if(!isSuccess)
 				throw std::runtime_error("Incorrect format of calibration files");
