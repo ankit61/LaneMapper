@@ -55,8 +55,10 @@ namespace LD {
 			virtual void Sample(const ArrayXXf& _data, ArrayXXf& _sampleIndices, 
 					const ulli& _numSamples);
 
-			virtual void GenerateHypothesis(const ArrayXXf& _data, 
-					const ArrayXXf& _sampleIndices, ArrayXXf& _hypotheses) = 0;
+			virtual ArrayXf GenerateHypothesis(const vector<ArrayXf>& _samples) = 0;
+
+			virtual void GenerateHypotheses(const ArrayXXf& _data, 
+				const ArrayXXf& _sampleIndices, ArrayXXf& _hypotheses);
 
 			virtual void FitModels(const ArrayXXf& _data, const ArrayXf& _clusters, vector<ArrayXf>& _models, const int& _noiseIndex = -1);
 
@@ -99,6 +101,8 @@ namespace LD {
 			pugi::xml_node m_TLinkageNode;
 			int m_minSamples, m_modelParams, m_samplesPerDataPt;
 			string m_dataFile;
+			bool m_shouldTranspose;
+			string m_modelFile;
 	};
 }
 #endif

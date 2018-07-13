@@ -12,14 +12,18 @@ namespace LD {
 	void TLinkage::ParseXML() {
 		m_xml = m_xml.child("TLinkage");
 
-		string sampler = m_xml.child("SolverInstance").attribute("sampler").as_string();
-		string preferenceFinder = m_xml.child("SolverInstance").attribute("preferenceFinder").as_string();
-		string outlierRejector = m_xml.child("SolverInstance").attribute("outlierRejector").as_string();
-		m_samplesPerDataPt = m_xml.child("SolverInstance").attribute("samplesPerDataPt").as_int();
-		m_dataFile = m_xml.child("SolverInstance").attribute("dataFile").as_string();
+		pugi::xml_node solverInstanceNode = m_xml.child("SolverInstance");
+
+		string sampler = solverInstanceNode.attribute("sampler").as_string();
+		string preferenceFinder = solverInstanceNode.attribute("preferenceFinder").as_string();
+		string outlierRejector = solverInstanceNode.attribute("outlierRejector").as_string();
+		m_samplesPerDataPt = solverInstanceNode.attribute("samplesPerDataPt").as_int();
+		m_dataFile = solverInstanceNode.attribute("dataFile").as_string();
+		m_shouldTranspose = solverInstanceNode.attribute("shouldTranspose").as_bool();
+		m_modelFile = solverInstanceNode.attribute("modelFile").as_string();
 	
-		if(sampler.empty() || preferenceFinder.empty() || outlierRejector.empty() || m_dataFile.empty() || !m_samplesPerDataPt) 
-			throw runtime_error("TLinkage SolverInstance node doesn't have one or more of the following attributes: sampler, preferenceFinder, outlierRejector, dataFile, samplesPerDataPt");
+		if(sampler.empty() || preferenceFinder.empty() || outlierRejector.empty() || m_dataFile.empty() || !m_samplesPerDataPt || m_modelFile.empty()) 
+			throw runtime_error("TLinkage SolverInstance node doesn't have one or more of the following attributes: sampler, preferenceFinder, outlierRejector, dataFile, samplesPerDataPt, modelFile");
 			
 
 		//Set Sampler
@@ -54,11 +58,11 @@ namespace LD {
 		if(m_debug)
 			cout << "Entering TLinkage::Run()" << endl;
 
-		ArrayXXf data, samples, hypotheses, residuals, pref;
+		ArrayXXf data, sampleIndices, hypotheses, residuals, pref;
 		ArrayXf clusters;
 		ReadDataFromFile(data);
-		Sample(data, samples, m_samplesPerDataPt * data.cols());
-		GenerateHypothesis(data, samples, hypotheses);
+		Sample(data, sampleIndices, m_samplesPerDataPt * data.cols());
+		GenerateHypotheses(data, sampleIndices, hypotheses);
 		FindResiduals(data, hypotheses, residuals);
 		FindPreferences(residuals, pref);
 		Cluster(pref, clusters);
@@ -81,6 +85,9 @@ namespace LD {
 		for(ulli r = 0; r < rows; r++)
 			for(ulli c = 0; c < cols; c++)
 				fin >> _data(r, c);
+
+		if(m_shouldTranspose)
+			_data.transposeInPlace();
 		
 		if(m_debug)
 			cout << "Exiting TLinkage::ReadDataFromFile()" << endl;
@@ -166,6 +173,26 @@ namespace LD {
 
 		if(m_debug)
 			cout << "Exiting TLinkage::FindPreferences()" << endl;
+
+	}
+
+	void TLinkage::GenerateHypotheses(const ArrayXXf& _data, 
+		const ArrayXXf& _sampleIndices, ArrayXXf& _hypotheses) {
+		
+		if(m_debug)
+			cout << "Entering TLinkage::GenerateHypotheses()" << endl;
+	
+		_hypotheses.resize(m_modelParams, _sampleIndices.cols());
+		vector<ArrayXf> samples(m_minSamples);
+		
+		for(ulli c = 0; c < _sampleIndices.cols(); c++) {
+			for(ulli r = 0; r < _sampleIndices.rows(); r++)
+				samples[r] = _data.col(_sampleIndices(r, c));
+			_hypotheses.col(c) = GenerateHypothesis(samples);
+		}
+
+		if(m_debug)
+			cout << "Exiting TLinkage::GenerateHypotheses()" << endl;
 
 	}
 
@@ -280,6 +307,11 @@ namespace LD {
 					OuterStride<>(_data.rows())).array(); //this is a deep copy
 			FitModel(clusters[i], _models[i]);
 		}
+
+		std::ofstream fout(m_modelFile);
+
+		for(int i = 0; i < _models.size(); i++)
+			fout << _models[i] << endl << endl;
 
 		if(m_debug)
 			cout << "Exiting TLinkage::FitModels()" << endl;

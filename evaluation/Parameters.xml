@@ -12,7 +12,7 @@
 		</Refiner>
 		
 		<VeloProjector>
-			<SolverInstance dataRoot="/home/ankit/data_road/2011_09_26_drive_0056_sync/image_02/data/" dataFile="images.txt" segRoot="Segmented_30/" refinedRoot ="MorphologicalSub/" veloRoot="/home/ankit/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" calibRoot="/home/ankit/data_road/calib" outputRoot="Lidar/" retentionFrequency="5" camNum="2" minX="5"/>
+			<SolverInstance dataRoot="/home/ankit/data_road/2011_09_26_drive_0056_sync/image_02/data/" dataFile="images.txt" segRoot="Segmented_30/" refinedRoot ="MorphologicalSub/" veloRoot="/home/ankit/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" calibRoot="/home/ankit/data_road/calib" outputRoot="Lidar/" retentionFrequency="5" camNum="2" minX="5" outputFile="merged_3D_pts.txt"/>
 		</VeloProjector>
 		
 		<TLinkage>
@@ -25,6 +25,7 @@
 				<Line/>
 				<Plane/>
 				<Circle/>
+				<Surface/>
 			</Models>
 
 			<PreferenceFinders inlierThreshold="0.13">
@@ -34,9 +35,11 @@
 				<Tukey/>
 			</PreferenceFinders>
 
-			<OutlierRejectors/>
+			<OutlierRejectors>
+				<Max_size_change/>
+			</OutlierRejectors>
 
-			<SolverInstance dataFile="Circles.txt" model="Circle" preferenceFinder="Exp" sampler="Prefer_near" outlierRejector="Max_Size_Change" samplesPerDataPt="5"/>
+			<SolverInstance dataFile="merged_3D_pts.txt" shouldTranspose="true" model="Surface" modelFile="models.txt" preferenceFinder="Exp" sampler="Uniform" outlierRejector="Max_Size_Change" samplesPerDataPt="5"/>
 
 		</TLinkage>
 

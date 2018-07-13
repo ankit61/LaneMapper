@@ -4,6 +4,8 @@ project(LaneDetection)
 find_package( OpenCV REQUIRED )
 find_package(Boost COMPONENTS regex system filesystem REQUIRED)
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_BUILD_TYPE Debug)
+
 
 set(ICNET_ROOT "/home/ankit/Research/ICNet")
 set(PUGIXML_ROOT "/home/ankit/Research/pugixml-1.9")
@@ -52,6 +54,7 @@ add_executable(
 	TLinkage/Line2DTLinkage.cpp
 	TLinkage/PlaneTLinkage.cpp
 	TLinkage/Circle2DTLinkage.cpp
+	TLinkage/SurfaceTLinkage.cpp
 )
 
 target_link_libraries(LaneDetection ${OpenCV_LIBS} ${LIBS})
