@@ -1,3 +1,6 @@
+#ifndef VELO_PROJECTOR_H_
+#define VELO_PROJECTOR_H_
+
 #include<string>
 #include<libgen.h>
 #include<vector>
@@ -19,21 +22,17 @@
 namespace LD {
 
 	using namespace cv;
-	using std::string;
-	using std::vector;
-	using std::cout;
-	using std::endl;
 
 	class VeloProjector : public Solver {
-		private:
+		protected:
 			
 			string m_dataRoot;
 			string m_calibRoot;
-			string m_segRoot;
-			string m_refinedRoot;
 			string m_veloRoot;
 			string m_outputRoot;
 			string m_dataFile;
+			string m_imgBaseName;
+			Mat m_inputImg;
 			double m_minX;
 			int m_retentionFrequency;
 			int m_camNum;
@@ -41,26 +40,24 @@ namespace LD {
 			Eigen::MatrixXf m_PRect, m_Tr, m_RRect;
 			CalibDataLoader m_calibDataLoader;
 			Mat m_reflectivity;
-			std::ofstream m_ptsFile3D;
 
 			void ReadVeloData(string _binFile);
-
-			void IntersectIn3D(const Eigen::MatrixXf _veloImg, const Mat& _segImg, double _thresh, Mat _img = Mat());
-			
-			double OtsuThresholdRoad(const Eigen::MatrixXf _veloImg, const Mat& _segImg);
 
 			void Project(const Eigen::MatrixXf& _PVeloToImg, Eigen::MatrixXf& _veloImg);
 			
 			void ComputeProjMat(Eigen::MatrixXf& _PVeloToImg);
+
+			virtual void ProcessProjectedLidarPts(Eigen::MatrixXf& _veloImg) = 0;
 			
 		public:
 
 			VeloProjector(string _xmlFile);
 
-			void ParseXML() override;
+			virtual void ParseXML() override;
 			
 			virtual void Run() override;
 			
 	};
 
 }
+#endif
