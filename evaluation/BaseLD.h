@@ -22,15 +22,15 @@ namespace LD {
 			string m_xmlFileName;
 			bool m_debug; //to be changed
 			pugi::xml_node m_xml;
+			pugi::xml_document m_xmlDoc;
 
 			virtual void ParseXML(string _file) final {
-				pugi::xml_document doc;
-				pugi::xml_parse_result docStatus = doc.load_file(_file.c_str());
+				pugi::xml_parse_result docStatus = m_xmlDoc.load_file(_file.c_str());
 
 				if(!docStatus)
 					throw runtime_error("Error with " + _file + ": "  + docStatus.description());
 
-				m_xml = doc.document_element();
+				m_xml = m_xmlDoc.document_element();
 
 				m_debug = m_xml.child("Main").attribute("debug").as_bool();
 			}
