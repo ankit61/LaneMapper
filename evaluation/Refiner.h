@@ -6,6 +6,9 @@
 
 //TODO: Check pre conditions of functions. Some only except CV_8U type images
 
+#ifndef REFINER_H_
+#define REFINER_H_
+
 #include<string>
 //<libgen.h> is included in Linux; it's only used to extract base name from full file path
 //user can easily code this functionality on other platforms manually
@@ -86,3 +89,5 @@ namespace LD {
 	};
 
 }
+
+#endif

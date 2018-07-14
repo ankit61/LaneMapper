@@ -4,6 +4,9 @@
  * \date  06-06-2018
 */
 
+#ifndef SEGMENTER_H_
+#define SEGMENTER_H_
+
 #include<string>
 //<libgen.h> is included in Linux; it's only used to extract base name from full file path
 //user can easily code this functionality on other platforms manually
@@ -124,3 +127,5 @@ namespace LD {
 	};
 
 }
+
+#endif

@@ -1,3 +1,6 @@
+#ifndef CALIB_DATA_LOADER_H_
+#define CALIB_DATA_LOADER_H_
+
 #include<fstream>
 #include<string>
 #include<iostream>
@@ -53,3 +56,5 @@ namespace LD {
 	};
 
 }
+
+#endif
