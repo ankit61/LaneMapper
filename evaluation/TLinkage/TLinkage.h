@@ -4,6 +4,7 @@
 #include"../Solver.h"
 #include<Eigen/Dense>
 #include<memory>
+#include<fstream>
 
 //Samplers
 
@@ -15,6 +16,7 @@
 
 #include"OutlierRejector.h"
 #include"MaxDiffOR.h"
+#include"KLargestOR.h"
 
 //Preference Finders
 
@@ -37,6 +39,7 @@ namespace LD {
 				UNIFORM,
 				PREFER_NEAR,
 			};
+			
 			enum VotingScheme {
 				EXP,
 				GAUSS,
@@ -45,12 +48,13 @@ namespace LD {
 			};
 
 			enum OutlierRejectionMethod {
-				MAX_SIZE_CHANGE
+				MAX_SIZE_CHANGE,
+				K_LARGEST
 			};
 
 			virtual void Run() override;
 
-			void ReadDataFromFile(ArrayXXf& _data);
+			void ReadDataFromFile(std::ifstream& fin, ArrayXXf& _data);
 
 			virtual void Sample(const ArrayXXf& _data, ArrayXXf& _sampleIndices, 
 					const ulli& _numSamples);
@@ -81,16 +85,13 @@ namespace LD {
 
 			void CalculateTanimotoDist(const ArrayXXf& _preferences, ArrayXXf& _distances);
 
-			float Tanimoto(const ArrayXf& _a, const ArrayXf& _b);
-
-			TLinkage(int _minSamples, int _modelParams, string _xmlFile) : Solver(_xmlFile), 
-			m_minSamples(_minSamples), m_modelParams(_modelParams),
-			m_sampler(std::make_unique<UniformSampler>(m_xmlFileName)), 
-			m_outlierRejector(std::make_unique<MaxDiffOR>(_minSamples, m_xmlFileName)) { ParseXML(); }
+			TLinkage(int _minSamples, int _modelParams, string _xmlFile);
 
 		protected:
 
 			virtual double Distance(ArrayXf _dataPoint, ArrayXf _model) = 0;
+			
+			float Tanimoto(const ArrayXf& _a, const ArrayXf& _b);
 
 			virtual void ParseXML();
 
@@ -101,8 +102,13 @@ namespace LD {
 			pugi::xml_node m_TLinkageNode;
 			int m_minSamples, m_modelParams, m_samplesPerDataPt;
 			string m_dataFile;
+			string m_imgName;
 			bool m_shouldTranspose;
+			bool m_saveClusters;
 			string m_modelFile;
+			string m_clusterFile;
+			std::ofstream m_foutModels;
+			std::ofstream m_foutClusters;
 	};
 }
 #endif

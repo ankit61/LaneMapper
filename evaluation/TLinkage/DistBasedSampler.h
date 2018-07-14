@@ -15,8 +15,6 @@ namespace LD {
 				if(m_debug)
 					cout << "Entering DistBasedSampler::operator() " << endl;
 
-				m_sigma = 0.2; //FIXME: Remove this and put it in XML
-
 				ArrayXXf cdfs;
 				_sampleIndices.resize(_minSamples, _numSamples);
 
@@ -28,6 +26,7 @@ namespace LD {
 					uniques.insert(_sampleIndices(0, i));
 					while(uniques.size() != _minSamples) {
 						auto it = std::upper_bound(cdfs.col(_sampleIndices(0, i)).data(), cdfs.col(_sampleIndices(0, i)).data() + cdfs.rows(), (double) rand() / RAND_MAX);
+
 						_sampleIndices(uniques.size(), i) = std::distance(cdfs.col(_sampleIndices(0, i)).data(), it);
 						if(_sampleIndices(uniques.size(), i) != _data.cols())
 							uniques.insert(_sampleIndices(uniques.size(), i));
@@ -58,7 +57,7 @@ namespace LD {
 				for(ulli r = 0; r < _data.cols(); r++) {
 					for(ulli c = 0; c < _data.cols(); c++) {
 						dist = Distance(_data.col(r), _data.col(c));
-						_cdfs(r, c) = std::exp(-std::pow(dist, 2) / m_sigma);
+						_cdfs(r, c) = (dist == 0) ? 0 : std::exp(-std::pow(dist, 2) / m_sigma);
 					}
 				}
 

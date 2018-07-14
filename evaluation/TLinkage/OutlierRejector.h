@@ -11,7 +11,7 @@ namespace LD {
 		public:
 			virtual void operator()(const ArrayXf& _clusters, ArrayXf& _out) = 0;
 
-			virtual void ParseXML() { 
+			virtual void ParseXML() override { 
 				m_xml = m_xml.child("Solvers").child("TLinkage").child("OutlierRejectors");  
 			}
 

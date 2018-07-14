@@ -5,38 +5,50 @@
 #include<fstream>
 #include <boost/algorithm/string/predicate.hpp>
 
-//TODO: Make a Run function
-
 namespace LD {
 
+	
+		TLinkage::TLinkage(int _minSamples, int _modelParams, string _xmlFile) : 
+			Solver(_xmlFile), m_minSamples(_minSamples), m_modelParams(_modelParams), m_sampler(std::make_unique<UniformSampler>(m_xmlFileName)), 
+			m_outlierRejector(std::make_unique<MaxDiffOR>(_minSamples, m_xmlFileName)) { 
+			
+			ParseXML(); 
+			m_foutModels.open(m_modelFile);
+			m_foutClusters.open(m_clusterFile);
+
+		}
+	
 	void TLinkage::ParseXML() {
 		m_xml = m_xml.child("TLinkage");
 
 		pugi::xml_node solverInstanceNode = m_xml.child("SolverInstance");
 
-		string sampler = solverInstanceNode.attribute("sampler").as_string();
+		string sampler 			= solverInstanceNode.attribute("sampler").as_string();
 		string preferenceFinder = solverInstanceNode.attribute("preferenceFinder").as_string();
-		string outlierRejector = solverInstanceNode.attribute("outlierRejector").as_string();
-		m_samplesPerDataPt = solverInstanceNode.attribute("samplesPerDataPt").as_int();
-		m_dataFile = solverInstanceNode.attribute("dataFile").as_string();
-		m_shouldTranspose = solverInstanceNode.attribute("shouldTranspose").as_bool();
-		m_modelFile = solverInstanceNode.attribute("modelFile").as_string();
+		string outlierRejector 	= solverInstanceNode.attribute("outlierRejector").as_string();
+		m_samplesPerDataPt 		= solverInstanceNode.attribute("samplesPerDataPt").as_int();
+		m_dataFile 				= solverInstanceNode.attribute("dataFile").as_string();
+		m_shouldTranspose 		= solverInstanceNode.attribute("shouldTranspose").as_bool();
+		m_modelFile 			= solverInstanceNode.attribute("modelFile").as_string();
+		m_saveClusters 			= solverInstanceNode.attribute("saveClusters").as_bool(true);
+		m_clusterFile 			= solverInstanceNode.attribute("clusterFile").as_string();
 	
-		if(sampler.empty() || preferenceFinder.empty() || outlierRejector.empty() || m_dataFile.empty() || !m_samplesPerDataPt || m_modelFile.empty()) 
-			throw runtime_error("TLinkage SolverInstance node doesn't have one or more of the following attributes: sampler, preferenceFinder, outlierRejector, dataFile, samplesPerDataPt, modelFile");
+		if(sampler.empty() || preferenceFinder.empty() || outlierRejector.empty() || m_dataFile.empty() || !m_samplesPerDataPt || m_modelFile.empty() || (m_saveClusters && m_clusterFile.empty())) 
+			throw runtime_error("TLinkage SolverInstance node doesn't have one or more of the following attributes: sampler, preferenceFinder, outlierRejector, dataFile, samplesPerDataPt, modelFile, saveClusters, clusterFile");
 			
-
 		//Set Sampler
 		if(boost::iequals(sampler, "Uniform"))
 			SetSampler(UNIFORM);
-		else if(boost::iequals(sampler, "Prefer_near"))
+		else if(boost::iequals(sampler, "PreferNear"))
 			SetSampler(PREFER_NEAR);
 		else
 			throw runtime_error("No such sampler found: " + sampler);
 
 		//Set Outlier Rejector
-		if(boost::iequals(outlierRejector, "Max_size_change"))
+		if(boost::iequals(outlierRejector, "MaxSizeChange"))
 			SetOutlierRejector(MAX_SIZE_CHANGE);
+		else if(boost::iequals(outlierRejector, "KLargest"))
+			SetOutlierRejector(K_LARGEST);
 		else
 			throw runtime_error("No such outlier rejector found: " + outlierRejector);
 
@@ -58,39 +70,53 @@ namespace LD {
 		if(m_debug)
 			cout << "Entering TLinkage::Run()" << endl;
 
-		ArrayXXf data, sampleIndices, hypotheses, residuals, pref;
-		ArrayXf clusters;
-		ReadDataFromFile(data);
-		Sample(data, sampleIndices, m_samplesPerDataPt * data.cols());
-		GenerateHypotheses(data, sampleIndices, hypotheses);
-		FindResiduals(data, hypotheses, residuals);
-		FindPreferences(residuals, pref);
-		Cluster(pref, clusters);
-		RejectOutliers(clusters, clusters);
-//		cout<< clusters << endl;
-		FitModels(data, clusters, m_models);
+		std::ifstream fin(m_dataFile.c_str());
+		if(!fin)
+			throw runtime_error("couldn't open " + m_dataFile);
+		while(!fin.eof()) {
+			fin >> m_imgName;
+			ArrayXXf data, sampleIndices, hypotheses, residuals, pref;
+			ArrayXf clusters;
+			ReadDataFromFile(fin, data);
+			Sample(data, sampleIndices, m_samplesPerDataPt * data.cols());
+			GenerateHypotheses(data, sampleIndices, hypotheses);
+			FindResiduals(data, hypotheses, residuals);
+			FindPreferences(residuals, pref);
+			Cluster(pref, clusters);
+			RejectOutliers(clusters, clusters);
+			if(m_saveClusters) {
+				m_foutClusters << m_imgName << endl;
+				m_foutClusters << clusters << endl;
+			}
+			FitModels(data, clusters, m_models);
+			m_foutModels << m_imgName << endl;
+			for(int i = 0; i < m_models.size(); i++)
+				m_foutModels << m_models[i] << endl << endl;
+		}
 		
 		if(m_debug)
 			cout << "Exiting TLinkage::Run()" << endl;
 	}
 
-	void TLinkage::ReadDataFromFile(ArrayXXf& _data) {
+	void TLinkage::ReadDataFromFile(std::ifstream& _fin, ArrayXXf& _data) {
 		if(m_debug)
 			cout << "Entering TLinkage::ReadDataFromFile()" << endl;
 
-		std::ifstream fin(m_dataFile.c_str());
 		ulli rows, cols;
-		fin >> rows >> cols;
+		_fin >> rows >> cols;
+
 		_data.resize(rows, cols);
 		for(ulli r = 0; r < rows; r++)
 			for(ulli c = 0; c < cols; c++)
-				fin >> _data(r, c);
+				_fin >> _data(r, c);
 
 		if(m_shouldTranspose)
 			_data.transposeInPlace();
 		
-		if(m_debug)
+		if(m_debug) {
+			cout << "Read matrix of size: " << _data.rows() << "x" << _data.cols() << endl;
 			cout << "Exiting TLinkage::ReadDataFromFile()" << endl;
+		}
 	}
 
 	void TLinkage::SetSampler(SamplingMethod _method) {
@@ -101,6 +127,9 @@ namespace LD {
 			case UNIFORM:
 				m_sampler = std::make_unique<UniformSampler>(m_xmlFileName);
 				break;
+			default:
+				throw runtime_error("Attempt to set unknown sampler");
+				
 		}
 	}
 
@@ -109,6 +138,11 @@ namespace LD {
 			case MAX_SIZE_CHANGE:
 				m_outlierRejector = std::make_unique<MaxDiffOR>(m_minSamples, m_xmlFileName);
 				break;
+			case K_LARGEST:
+				m_outlierRejector = std::make_unique<KLargestOR>(m_xmlFileName);
+				break;
+			default:
+				throw runtime_error("Attempt to set unknown outlier rejector");
 		}
 	}
 
@@ -307,11 +341,6 @@ namespace LD {
 					OuterStride<>(_data.rows())).array(); //this is a deep copy
 			FitModel(clusters[i], _models[i]);
 		}
-
-		std::ofstream fout(m_modelFile);
-
-		for(int i = 0; i < _models.size(); i++)
-			fout << _models[i] << endl << endl;
 
 		if(m_debug)
 			cout << "Exiting TLinkage::FitModels()" << endl;

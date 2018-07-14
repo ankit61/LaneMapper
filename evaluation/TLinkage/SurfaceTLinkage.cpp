@@ -73,5 +73,4 @@ namespace LD {
 		if(m_debug)
 			cout << "Exiting SurfaceTLinkage::FitModel()" << endl;
 	}
-
 }
