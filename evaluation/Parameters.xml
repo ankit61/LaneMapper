@@ -12,13 +12,17 @@
 		</Refiner>
 		
 		<VeloProjector>
-			<SolverInstance dataRoot="/home/ankit/data_road/2011_09_26_drive_0056_sync/image_02/data/" dataFile="images.txt" segRoot="Segmented_30/" refinedRoot ="MorphologicalSub/" veloRoot="/home/ankit/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" calibRoot="/home/ankit/data_road/calib" outputRoot="Lidar/" retentionFrequency="5" camNum="2" minX="5" outputFile="merged_3D_pts.txt"/>
+			<ResultIntersector segRoot="Segmented_30/" refinedRoot ="MorphologicalSub/" refImgPrefix="thresholded_" segImgPrefix="segmented_" outputFile="merged_3D_pts.txt" saveVizImg="false" vizImgPrefix="intersected_"/>
+
+			<SurfaceDataMaker segRoot="Segmented_30/" segImgPrefix="segmented_" outputFile="lidarRoad.txt" saveVizImg="false" vizImgPrefix="lidarRoad_" minPoints="15"/>
+
+			<SolverInstance instance="SurfaceDataMaker" dataRoot="/home/ankit/data_road/2011_09_26_drive_0056_sync/image_02/data/" dataFile="images.txt"  veloRoot="/home/ankit/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" calibRoot="/home/ankit/data_road/calib" outputRoot="Lidar/" retentionFrequency="10" camNum="2" minX="5"/>
 		</VeloProjector>
 		
 		<TLinkage>
 			<Samplers>
 				<Uniform/>
-				<DistBased sigma="0.2"/>
+				<DistBased sigma="100"/>
 			</Samplers>
 
 			<Models>
@@ -28,7 +32,7 @@
 				<Surface/>
 			</Models>
 
-			<PreferenceFinders inlierThreshold="0.13">
+			<PreferenceFinders inlierThreshold="0.1">
 				<Exp divFactor="5"/>
 				<Hard/>
 				<Gauss divFactor="4"/>
@@ -36,15 +40,16 @@
 			</PreferenceFinders>
 
 			<OutlierRejectors>
-				<Max_size_change/>
+				<MaxSizeChange/>
+				<KLargest k="1"/>
 			</OutlierRejectors>
 
-			<SolverInstance dataFile="merged_3D_pts.txt" shouldTranspose="true" model="Surface" modelFile="models.txt" preferenceFinder="Exp" sampler="Uniform" outlierRejector="Max_Size_Change" samplesPerDataPt="5"/>
+			<SolverInstance model="Surface" dataFile="Lidar/lidarRoad.txt" shouldTranspose="true"  modelFile="surfaceModels.txt" saveClusters="true" clusterFile="surfaceClusters.txt" preferenceFinder="Exp" sampler="Uniform" outlierRejector="KLargest" samplesPerDataPt="5"/>
 
 		</TLinkage>
 
 	</Solvers>
 
-	<Main solver="VeloProjector" debug="true"/>
+	<Main solver= "TLinkage" debug="true"/>
 
 </Document>

@@ -6,7 +6,6 @@ find_package(Boost COMPONENTS regex system filesystem REQUIRED)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_BUILD_TYPE Debug)
 
-
 set(ICNET_ROOT "/home/ankit/Research/ICNet")
 set(PUGIXML_ROOT "/home/ankit/Research/pugixml-1.9")
 
@@ -50,6 +49,9 @@ add_executable(
 	Segmenter.cpp 
 	Refiner.cpp 
 	VeloProjector.cpp 
+	ResultIntersector.cpp 
+	SurfaceDataMaker.cpp 
+	Utilities.cpp
 	TLinkage/TLinkage.cpp
 	TLinkage/Line2DTLinkage.cpp
 	TLinkage/PlaneTLinkage.cpp

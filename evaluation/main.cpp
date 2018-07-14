@@ -3,6 +3,8 @@
 #include"Segmenter.h"
 #include"Refiner.h"
 #include"VeloProjector.h"
+#include"ResultIntersector.h"
+#include"SurfaceDataMaker.h"
 
 #include"TLinkage/TLinkage.h"
 #include"TLinkage/Line2DTLinkage.h"
@@ -32,8 +34,15 @@ int main(int argc, char* argv[]) {
 		solverPtr = std::make_unique<Segmenter>(argv[1]);
 	else if(boost::iequals(solver, "Refiner"))
 		solverPtr = std::make_unique<Refiner>(argv[1]);
-	else if(boost::iequals(solver, "VeloProjector"))
-		solverPtr = std::make_unique<VeloProjector>(argv[1]);
+	else if(boost::iequals(solver, "VeloProjector")) {
+		string instance(xml.document_element().child("Solvers").child("VeloProjector").child("SolverInstance").attribute("instance").as_string());
+		if(boost::iequals(instance, "ResultIntersector"))
+			solverPtr = std::make_unique<ResultIntersector>(argv[1]);
+		else if(boost::iequals(instance, "SurfaceDataMaker"))
+			solverPtr = std::make_unique<SurfaceDataMaker>(argv[1]);	
+		else
+			throw runtime_error("No such VeloProjector instance implemented: " + instance);
+	}
 	else if(boost::iequals(solver, "TLinkage")) {
 		string model(xml.document_element().child("Solvers").child("TLinkage").child("SolverInstance").attribute("model").as_string());
 		if(boost::iequals(model, "Line"))
