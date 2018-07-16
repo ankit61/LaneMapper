@@ -73,8 +73,7 @@ namespace LD {
 		std::ifstream fin(m_dataFile.c_str());
 		if(!fin)
 			throw runtime_error("couldn't open " + m_dataFile);
-		while(!fin.eof()) {
-			fin >> m_imgName;
+		while(fin >> m_imgName) {
 			ArrayXXf data, sampleIndices, hypotheses, residuals, pref;
 			ArrayXf clusters;
 			ReadDataFromFile(fin, data);

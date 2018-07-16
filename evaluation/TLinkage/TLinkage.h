@@ -100,7 +100,8 @@ namespace LD {
 			vector<ArrayXf> m_models;
 			std::unique_ptr<PreferenceFinder> m_preferenceFinder;
 			pugi::xml_node m_TLinkageNode;
-			int m_minSamples, m_modelParams, m_samplesPerDataPt;
+			int m_minSamples, m_modelParams;
+			int m_samplesPerDataPt;
 			string m_dataFile;
 			string m_imgName;
 			bool m_shouldTranspose;
