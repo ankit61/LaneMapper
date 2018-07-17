@@ -16,7 +16,7 @@ namespace LD {
 	}
 	
 	
-	void SurfaceDataMaker::ProcessProjectedLidarPts(Eigen::MatrixXf& _veloImg) {
+	void SurfaceDataMaker::ProcessProjectedLidarPts(const Eigen::MatrixXf& _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, Mat& _inputImg) {
 		
 		if(m_debug)
 			cout << "Entering ProcessProjectedLidarPts()" << endl;
@@ -29,18 +29,17 @@ namespace LD {
 		else if(m_debug) 
 			cout << "Successfully read segmented image: " << segImgName << endl;
 
-
 		int rows = 0, cols = 3;
 
 		//count rows
 
 		for(int i = 0; i < _veloImg.rows(); i++) {
 			int x = _veloImg(i, 0), y = _veloImg(i, 1);
-			int reflect = m_reflectivity.at<unsigned char>(i, 0);
+			float reflect = _reflectivity.at<float>(i, 0);
 			if(isValid(y, x, segImg.rows, segImg.cols) && segImg.at<unsigned char>(y, x)) {
 				rows++;
 				if(m_saveVizImg)
-					circle(m_inputImg, Point(x, y), 5, Scalar(reflect, 0, 0));		
+					circle(_inputImg, Point(x, y), 5, Scalar(255 * reflect, 0, 0));		
 			}
 		}
 		
@@ -52,12 +51,12 @@ namespace LD {
 			for(int i = 0; i < _veloImg.rows(); i++) {
 				int x = _veloImg(i, 0), y = _veloImg(i, 1);
 				if(isValid(y, x, segImg.rows, segImg.cols) && segImg.at<unsigned char>(y, x))
-					m_fout << m_veloPoints.at<float>(i, 0) << "\t" << m_veloPoints.at<float>(i, 1) << "\t" << m_veloPoints.at<float>(i, 2) << endl;
+					m_fout << _veloPoints.at<float>(i, 0) << "\t" << _veloPoints.at<float>(i, 1) << "\t" << _veloPoints.at<float>(i, 2) << endl;
 			}
 			m_fout.flush();
 
 			if(m_saveVizImg)
-				imwrite(m_outputRoot + "/" + m_vizImgPrefix + m_imgBaseName, m_inputImg);
+				imwrite(m_outputRoot + "/" + m_vizImgPrefix + m_imgBaseName, _inputImg);
 		}
 
 		if(m_debug)

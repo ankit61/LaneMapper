@@ -32,13 +32,18 @@ namespace LD {
 
 	void Segmenter::ParseXML() {
 		m_xml = m_xml.child("Segmenter");
-		m_dataRoot = m_xml.child("SolverInstance").attribute("dataRoot").as_string();
-		m_dataFile = m_xml.child("SolverInstance").attribute("dataFile").as_string();
-		m_segRoot = m_xml.child("SolverInstance").attribute("segRoot").as_string();
-		m_overlayedRoot = m_xml.child("SolverInstance").attribute("overlayedRoot").as_string();
+		pugi::xml_node solverInstance = m_xml.child("SolverInstance");
+		
+		m_dataRoot 		= solverInstance.attribute("dataRoot").as_string();
+		m_dataFile		= solverInstance.attribute("dataFile").as_string();
+		m_segRoot 		= solverInstance.attribute("segRoot").as_string();
+		m_overlayedRoot = solverInstance.attribute("overlayedRoot").as_string();
+		m_saveVizImg	= solverInstance.attribute("saveVizImg").as_bool(true); 
+		m_vizImgPrefix	= solverInstance.attribute("vizImgPrefix").as_string(); 
+		m_segImgPrefix	= solverInstance.attribute("segImgPrefix").as_string();
 
-		if(m_dataRoot.empty() || m_dataFile.empty() || m_segRoot.empty() || m_overlayedRoot.empty())
-			throw runtime_error("One of the following attributes are missing in SolverInstance node of Segmenter: dataRoot, dataFile, segRoot, overlayedRoot");
+		if(m_dataRoot.empty() || m_dataFile.empty() || m_segRoot.empty() || m_overlayedRoot.empty() || m_segImgPrefix.empty() || (m_vizImgPrefix.empty() && m_saveVizImg))
+			throw runtime_error("One of the following attributes are missing in SolverInstance node of Segmenter: dataRoot, dataFile, segRoot, overlayedRoot, saveVizImg, vizImgPrefix, segImgPrefix");
 	}
 
 	void Segmenter::Run() {
@@ -100,8 +105,17 @@ namespace LD {
 		if(m_debug)
 			cout << "Entering Segmenter::Preprocess()" << endl;
 		
+		//equalizing histogram gives better results
+		cv::Mat equalizedImg;
+		cvtColor(_inputImg, equalizedImg, CV_BGR2YUV);
+		vector<cv::Mat> channels;
+		split(equalizedImg, channels);
+		equalizeHist(channels[0], channels[0]);
+		merge(channels, equalizedImg);
+		cvtColor(equalizedImg, equalizedImg, CV_YUV2BGR);
+	
 		cv::Mat img;
-		_inputImg.convertTo(img, CV_32FC3);
+		equalizedImg.convertTo(img, CV_32FC3);
 		cv::resize(img, img, cv::Size(m_cropSizeW, m_cropSizeH));
 		cv::subtract(img, cv::Scalar(m_meanB, m_meanG, m_meanR), img);
 		cv::split(img, *_inputChannels); //puting image in input layer
@@ -171,7 +185,7 @@ namespace LD {
 		}
 		
 		cv::LUT(_segImg, m_colormap, _segImg);
-		string segImgName = "segmented_" + m_imgBaseName;
+		string segImgName = m_segImgPrefix + m_imgBaseName;
 		vector<cv::Mat> channels;
 		
 		if(m_debug)
@@ -183,11 +197,11 @@ namespace LD {
 		if(m_debug)
 			cout << "Image " << segImgName << "saved in " << m_segRoot << endl;
 
-		if(m_debug) {
+		if(m_saveVizImg) {
 
 			//create overlay
 			cv::Mat overlayed;
-			string overlayedImgName = "overlayed_" + m_imgBaseName;
+			string overlayedImgName = m_vizImgPrefix + m_imgBaseName;
 			
 			vector<cv::Mat> channels;
 			cv::Mat black = cv::Mat::zeros(_segImg.rows, _segImg.cols, CV_8UC1);

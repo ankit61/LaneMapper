@@ -18,7 +18,7 @@ namespace LD {
 			virtual void ParseXML() override;
 
 		public:
-			virtual void ProcessProjectedLidarPts(Eigen::MatrixXf& _veloImg) override;
+			virtual void ProcessProjectedLidarPts(const Eigen::MatrixXf& _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, Mat& _inputImg) override;
 
 			SurfaceDataMaker(string _xmlFile) : VeloProjector(_xmlFile) { ParseXML(); m_fout.open(m_outputRoot + "/" + m_outputFile); }
 	};

@@ -20,11 +20,11 @@ namespace LD {
 			std::ofstream m_fout;
 			bool m_saveVizImg;
 			
-			virtual void ProcessProjectedLidarPts(Eigen::MatrixXf& _veloImg) override;
+			virtual void ProcessProjectedLidarPts(const Eigen::MatrixXf& _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, Mat& _inputImg) override;
 			
-			void IntersectIn3D(const Eigen::MatrixXf _veloImg, const Mat& _refinedImg, const double& _thresh, const Mat& _vizImg);
-			
-			double OtsuThresholdRoad(const Eigen::MatrixXf _veloImg, const Mat& _segImg);
+			void IntersectIn3D(const Eigen::MatrixXf _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, const Mat& _refinedImg, const double& _thresh, const Mat& _vizImg);
+
+			double OtsuThresholdRoad(const Eigen::MatrixXf _veloImg, const Mat& _segImg, const Mat& _reflectivity);
 
 			virtual void ParseXML() override;
 	};

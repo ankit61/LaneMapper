@@ -14,7 +14,7 @@
 #include<stdio.h>
 #include<exception>
 #include<stdlib.h>
-#include "CalibDataLoader.h"
+#include"CalibDataLoader.h"
 #include<fstream>
 
 #include"Solver.h"
@@ -32,22 +32,20 @@ namespace LD {
 			string m_outputRoot;
 			string m_dataFile;
 			string m_imgBaseName;
-			Mat m_inputImg;
 			double m_minX;
 			int m_retentionFrequency;
 			int m_camNum;
 			Mat m_veloPoints;
 			Eigen::MatrixXf m_PRect, m_Tr, m_RRect;
 			CalibDataLoader m_calibDataLoader;
-			Mat m_reflectivity;
 
-			void ReadVeloData(string _binFile);
+			virtual void ReadVeloData(string _binFile, Mat& _veloPoints);
 
-			void Project(const Eigen::MatrixXf& _PVeloToImg, Eigen::MatrixXf& _veloImg);
+			virtual void Project(const Eigen::MatrixXf& _PVeloToImg, Mat& _veloPoints, Eigen::MatrixXf& _veloImg, Mat& _reflectivity) final;
 			
 			void ComputeProjMat(Eigen::MatrixXf& _PVeloToImg);
 
-			virtual void ProcessProjectedLidarPts(Eigen::MatrixXf& _veloImg) = 0;
+			virtual void ProcessProjectedLidarPts(const Eigen::MatrixXf& _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, Mat& _inputImg) = 0;
 			
 		public:
 
@@ -60,4 +58,5 @@ namespace LD {
 	};
 
 }
+
 #endif

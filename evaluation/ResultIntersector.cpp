@@ -16,7 +16,7 @@ namespace LD {
 			throw runtime_error("at least one of the following attributes are missing in ResultIntersector node: segRoot, refinedRoot, outputFile, segImgPrefix, refImgPrefix, vizImgPrefix");
 	}
 
-	void ResultIntersector::ProcessProjectedLidarPts(Eigen::MatrixXf& _veloImg) {
+	void ResultIntersector::ProcessProjectedLidarPts(const Eigen::MatrixXf& _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, Mat& _inputImg) {
 
 		if(m_debug)
 			cout << "Exiting ResultIntersector::ProcessProjectedLidarPts()" << endl;
@@ -37,57 +37,74 @@ namespace LD {
 		else 
 			cout << "Successfully read refined image: " << refImgName << endl;
 
-		double thresh = OtsuThresholdRoad(_veloImg, segImg);
+		double thresh = OtsuThresholdRoad(_veloImg, segImg, _reflectivity);
 		if(m_debug)
 			cout << "Threshold set to " << thresh << endl;
 		m_fout << m_imgBaseName << endl;
-		IntersectIn3D(_veloImg, refinedImg, thresh, m_inputImg);
+		IntersectIn3D(_veloImg, _veloPoints, _reflectivity, refinedImg, thresh, _inputImg);
 
 		if(m_saveVizImg)
-			imwrite(m_outputRoot + "/" + m_vizImgPrefix + m_imgBaseName, m_inputImg);
+			imwrite(m_outputRoot + "/" + m_vizImgPrefix + m_imgBaseName, _inputImg);
 
 		if(m_debug)
 			cout << "Exiting ResultIntersector::ProcessProjectedLidarPts()" << endl;
 
 	}
 
-	void ResultIntersector::IntersectIn3D(const Eigen::MatrixXf _veloImg, const Mat& _refinedImg, const double& _thresh, const Mat& _vizImg) {
+	void ResultIntersector::IntersectIn3D(const Eigen::MatrixXf _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, const Mat& _refinedImg, const double& _thresh, const Mat& _vizImg) {
 		if(m_debug)
 			cout << "Entering ResultIntersector::IntersectIn3D()" << endl;
 
+		ulli rows = 0, cols = 3;
+
+		//find number of rows
+
 		for(int i = 0; i < _veloImg.rows(); i++) {
 			int x = _veloImg(i, 0), y = _veloImg(i, 1);
-			int reflect = m_reflectivity.at<unsigned char>(i, 0);
+			float reflect = _reflectivity.at<float>(i, 0);
 			if(isValid(y, x, _refinedImg.rows, _refinedImg.cols) && _refinedImg.at<unsigned char>(y, x) && reflect > _thresh) { 
-				m_fout << m_veloPoints.at<float>(i, 0) << "\t" << m_veloPoints.at<float>(i, 1) << "\t" << m_veloPoints.at<float>(i, 2) << endl;
+				rows++;
 				if(m_saveVizImg)
-					circle(_vizImg, Point(x, y), 5, Scalar(reflect, 0, 0));
+					circle(_vizImg, Point(x, y), 5, Scalar(int(255 * reflect), 0, 0));
 			}
 		}
+
+		m_fout << rows << "\t" << cols << endl;
+
+		//print actual coordinates now
+		
+		for(int i = 0; i < _veloImg.rows(); i++) {
+			int x = _veloImg(i, 0), y = _veloImg(i, 1);
+			float reflect = _reflectivity.at<float>(i, 0);
+			if(isValid(y, x, _refinedImg.rows, _refinedImg.cols) && _refinedImg.at<unsigned char>(y, x) && reflect > _thresh) { 
+				m_fout << _veloPoints.at<float>(i, 0) << "\t" << _veloPoints.at<float>(i, 1) << "\t" << _veloPoints.at<float>(i, 2) << endl;
+			}
+		}
+
 		m_fout.flush();
 
 		if(m_debug)
 			cout << "Exiting ResultIntersector::IntersectIn3D()" << endl;
 	}
 
-	double ResultIntersector::OtsuThresholdRoad(const Eigen::MatrixXf _veloImg, const Mat& _segImg) {
+	double ResultIntersector::OtsuThresholdRoad(const Eigen::MatrixXf _veloImg, const Mat& _segImg, const Mat& _reflectivity) {
 		if(m_debug)
 			cout << "Entering ResultIntersector::OtsuThresholdRoad()" << endl;
 
 		//Find Otsu thresholding for points that are on road and have positive reflectivity
-		m_reflectivity = 255 * m_reflectivity;
-		m_reflectivity.convertTo(m_reflectivity, CV_8UC1);
+		Mat scaledReflectivity = 255 * _reflectivity;
+		scaledReflectivity.convertTo(scaledReflectivity, CV_8UC1);
 		vector<unsigned char> onRoadRef;
-		onRoadRef.reserve(m_reflectivity.rows);
+		onRoadRef.reserve(scaledReflectivity.rows);
 
-		for(long long int i = 0; i < m_reflectivity.rows; i++) {
+		for(long long int i = 0; i < scaledReflectivity.rows; i++) {
 			int x = _veloImg(i, 0), y = _veloImg(i, 1);
-			int reflect = m_reflectivity.at<unsigned char>(i, 0);
+			int reflect = scaledReflectivity.at<unsigned char>(i, 0);
 			if(isValid(y, x, _segImg.rows, _segImg.cols) && _segImg.at<unsigned char>(y, x)) 
-				onRoadRef.push_back(m_reflectivity.at<unsigned char>(i, 0));
+				onRoadRef.push_back(scaledReflectivity.at<unsigned char>(i, 0));
 		}
 
-		double thresh = threshold(onRoadRef, onRoadRef, 0, 255, THRESH_TOZERO | THRESH_OTSU);
+		double thresh = threshold(onRoadRef, onRoadRef, 0, 255, THRESH_TOZERO | THRESH_OTSU) / 255;
 
 		if(m_debug)
 			cout << "Exiting ResultIntersector::OtsuThresholdRoad()" << endl;

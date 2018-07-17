@@ -75,6 +75,10 @@ namespace LD {
 			/**< the colormap which would make output more readable */
 			cv::Mat m_colormap;
 
+			bool m_saveVizImg;
+			string m_vizImgPrefix;
+			string m_segImgPrefix;
+
 
 			/**
 			 * \brief preprocesses the input image (resizing, zero centering) so 

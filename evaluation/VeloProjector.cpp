@@ -67,23 +67,24 @@ namespace LD {
 
 		std::ifstream fin(m_dataFile.c_str());
 		string line;
-		Eigen::MatrixXf projection_mat, veloImgPts; 
+		Eigen::MatrixXf projectionMat, veloImgPts; 
+		Mat veloPoints, reflectivity;
 		while(std::getline(fin, line)) {
 		
 			m_imgBaseName  = string(basename(const_cast<char*>(line.c_str())));
 			string inputImgName = m_dataRoot + "/" + line;
 
-			m_inputImg = imread(inputImgName);
+			Mat inputImg = imread(inputImgName);
 
-			if(m_inputImg.empty())
+			if(inputImg.empty())
 				throw std::runtime_error("Can't open " + inputImgName);
 			else 
 				cout << "Successfully read input image: " << inputImgName << endl;
 
-			ReadVeloData(m_veloRoot + "/" + line.substr(0, line.size() - 3) + "bin");
-			ComputeProjMat(projection_mat);
-			Project(projection_mat, veloImgPts);
-			ProcessProjectedLidarPts(veloImgPts);
+			ReadVeloData(m_veloRoot + "/" + line.substr(0, line.size() - 3) + "bin", veloPoints);
+			ComputeProjMat(projectionMat);
+			Project(projectionMat, veloPoints, veloImgPts, reflectivity);
+			ProcessProjectedLidarPts(veloImgPts, veloPoints, reflectivity, inputImg);
 		}
 
 		if(m_debug)
@@ -92,12 +93,12 @@ namespace LD {
 
 
 
-	void VeloProjector::ReadVeloData(string _bin_file) {
+	void VeloProjector::ReadVeloData(string _bin_file, Mat& _veloPoints) {
 		//taken from KITTI website	
 		if(m_debug)
 			cout << "Entering VeloProjector::ReadVeloData() " << endl;
 
-		m_veloPoints.release();
+		_veloPoints.release();
 		// allocate 4 MB buffer (only ~130*4*4 KB are needed)
 		int32_t num = 1000000;
 		float *data = (float*)malloc(num*sizeof(float));
@@ -112,7 +113,7 @@ namespace LD {
 		for (int32_t i=0; i<num; i++) {
 			if(*px >= m_minX && (i % m_retentionFrequency) == 0) {
 				Mat m(1, 4, CV_32F, px);
-				m_veloPoints.push_back(m);   
+				_veloPoints.push_back(m);   
 			}
 			px+=4;
 		}
@@ -134,7 +135,7 @@ namespace LD {
 			cout << "Exiting VeloProjector::ComputeProjMat() " << endl;
 	}
 
-	void VeloProjector::Project(const Eigen::MatrixXf& _PVeloToImg, Eigen::MatrixXf& _veloImg) {
+	void VeloProjector::Project(const Eigen::MatrixXf& _PVeloToImg, Mat& _veloPoints, Eigen::MatrixXf& _veloImg, Mat& _reflectivity) {
 		
 		if(m_debug)
 			cout << "Entering VeloProjector::Project() " << endl;
@@ -142,15 +143,15 @@ namespace LD {
 		int dimNorm = _PVeloToImg.rows();
 		int dimProj = _PVeloToImg.cols();
 
-		if(dimProj != m_veloPoints.cols) 
+		if(dimProj != _veloPoints.cols) 
 			throw std::runtime_error("incorrect dimensions to multiply");
 
-		if(!m_veloPoints.isContinuous())
+		if(!_veloPoints.isContinuous())
 			throw std::runtime_error("matrix is not continuous");
 
-		Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> > veloPtsEg(m_veloPoints.ptr<float>(), m_veloPoints.rows, m_veloPoints.cols);
+		Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> > veloPtsEg(_veloPoints.ptr<float>(), _veloPoints.rows, _veloPoints.cols);
 		
-		m_reflectivity = m_veloPoints.col(dimProj - 1).clone();
+		_reflectivity = _veloPoints.col(dimProj - 1).clone();	
 		veloPtsEg.col(dimProj - 1) = Eigen::MatrixXf::Ones(veloPtsEg.rows(), 1);
 
 		Eigen::MatrixXf newPoints = (_PVeloToImg * veloPtsEg.transpose()).transpose();
