@@ -58,15 +58,16 @@ namespace LD {
 			/**< name of current image file being processed	*/
 			string m_imgBaseName;
 
-			/**< file stream of file where all stats would be stored*/
-			std::ofstream m_statFileStream;
+			string m_vizImgPrefix;
+			bool m_saveVizImg;
+			string m_refinedImgPrefix;
 
 			/**
 			 * \brief fits the image to a gaussian and thresholds the image based upon its intensity values
 			 * \param _extractedImg image which is black except where there is road
-			 * \param _thresholdedImg stores output 
+			 * \param _refinedImg stores output 
 			 */
-			void ThresholdImage(const Mat& _extractedImg, Mat& _thresholdedImg);
+			virtual void Refine(const Mat& _extractedImg, Mat& _refinedImg) = 0;
 
 			virtual void ParseXML() override;
 			
@@ -79,7 +80,6 @@ namespace LD {
 			 * \param _refinedRoot directory where refined images should be stored
 			 */
 			Refiner(string _xmlFile);
-
 
 			/** 
 			 * \brief coordinates calls to other member functions and saves the final input

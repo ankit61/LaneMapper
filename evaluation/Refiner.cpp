@@ -18,21 +18,25 @@ namespace LD {
 			cout << "Entering Refiner::Refiner()" << endl;
 
 		ParseXML();
-		m_statFileStream = std::ofstream(m_refinedRoot + "/stats.csv");
-		namedWindow( "show", WINDOW_NORMAL );
+		
 		if(m_debug)
 			cout << "Exiting Refiner::Refiner()" << endl;
 	}
 
 	void Refiner::ParseXML() {
 		m_xml = m_xml.child("Refiner");
-		m_dataRoot = m_xml.child("SolverInstance").attribute("dataRoot").as_string();
-		m_dataFile = m_xml.child("SolverInstance").attribute("dataFile").as_string();
-		m_segRoot = m_xml.child("SolverInstance").attribute("segRoot").as_string();
-		m_refinedRoot = m_xml.child("SolverInstance").attribute("refinedRoot").as_string();
+		pugi::xml_node solverInstance = m_xml.child("SolverInstance");
 
-		if(m_dataRoot.empty() || m_dataFile.empty() || m_segRoot.empty() || m_refinedRoot.empty())
-			throw runtime_error("One of the following attributes are missing in SolverInstance node of Segmenter: dataRoot, dataFile, segRoot, refinedRoot");
+		m_dataRoot			= solverInstance.attribute("dataRoot").as_string();
+		m_dataFile			= solverInstance.attribute("dataFile").as_string();
+		m_segRoot      		= solverInstance.attribute("segRoot").as_string();
+		m_refinedRoot  		= solverInstance.attribute("refinedRoot").as_string();
+		m_vizImgPrefix 		= solverInstance.attribute("vizImgPrefix").as_string();
+		m_saveVizImg   		= solverInstance.attribute("saveVizImg").as_bool(true);
+		m_refinedImgPrefix 	= solverInstance.attribute("refinedImgPrefix").as_string();
+
+		if(m_dataRoot.empty() || m_dataFile.empty() || m_segRoot.empty() || m_refinedRoot.empty() || (m_saveVizImg && m_vizImgPrefix.empty()) || m_refinedImgPrefix.empty())
+			throw runtime_error("One of the following attributes are missing in SolverInstance node of Segmenter: dataRoot, dataFile, segRoot, refinedRoot, vizImgPrefix, saveVizImg, refinedImgPrefix");
 	}
 
 	void Refiner::Run() {
@@ -47,14 +51,11 @@ namespace LD {
 			
 			m_imgBaseName = string(basename(const_cast<char*>(line.c_str())));
 			string fullImgName = m_dataRoot + "/" + line, fullSegName = m_segRoot + "/segmented_" + line; 
-			string _overlayedName = m_refinedRoot + "/overlayed_" + m_imgBaseName;
 			Mat original = imread(fullImgName);
-			Mat img, overlayed;
-			cvtColor(original, img, COLOR_RGB2GRAY);
 
 			Mat segImg = imread(fullSegName, IMREAD_GRAYSCALE);
-			Mat thresholdedImg;
-			if(img.empty()) { 
+			
+			if(original.empty()) { 
 				cout << "could not open or find " << fullImgName << endl;
 				exit(1);
 			}
@@ -66,39 +67,31 @@ namespace LD {
 			if(m_debug)
 				cout << "Successfully opened " << fullImgName << " and " << fullSegName << endl;
 			
-	//		morphologyEx(segImg, segImg, MORPH_CLOSE, getStructuringElement(MORPH_RECT, Size(7,7)));
-	//		morphologyEx(segImg, segImg, MORPH_DILATE, getStructuringElement(MORPH_RECT, Size(3,3)));
-			bitwise_and(img, segImg, img);
-			ThresholdImage(img, thresholdedImg);
+			Mat grayOriginal, refinedImg;
+			cvtColor(original, grayOriginal, COLOR_RGB2GRAY);
 			
-			bitwise_and(img, thresholdedImg, thresholdedImg);
-			Mat regions;
-			vector<Mat> channels;
-			channels.push_back(Mat::zeros(thresholdedImg.size(), CV_8U));
-			channels.push_back(Mat::zeros(thresholdedImg.size(), CV_8U));
-			channels.push_back(thresholdedImg);
-			merge(channels, regions);
-			addWeighted(regions, 0.5, original, 0.5, 0, overlayed);
+			bitwise_and(grayOriginal, segImg, grayOriginal);
+			Refine(grayOriginal, refinedImg);
+			
+			imwrite(m_refinedRoot + "/" + m_refinedImgPrefix + m_imgBaseName, refinedImg);
+			
+			if(m_saveVizImg) {  //save overlayed image
+				Mat regions, overlayed;
+				string overlayedName = m_refinedRoot + "/" + m_vizImgPrefix + m_imgBaseName;
+				vector<Mat> channels;
+				channels.push_back(Mat::zeros(refinedImg.size(), CV_8U));
+				channels.push_back(Mat::zeros(refinedImg.size(), CV_8U));
+				channels.push_back(refinedImg);
+				merge(channels, regions);
+				addWeighted(regions, 0.5, original, 0.5, 0, overlayed);
 
-			imwrite(_overlayedName, overlayed);
+				imwrite(overlayedName, overlayed);
+			}
 			
-			if(m_debug)
-				cout << "Saving " << _overlayedName << endl;
-		
 		}
 		
 		if(m_debug)
 			cout << "Exiting Refiner::Run()" << endl;
-	}
-
-	void Refiner::ThresholdImage(const Mat& _extractedImg,  Mat& _thresholdedImg) {
-		if(m_debug)
-			cout << "Entering Refiner::ThresholdImage()" << endl;
-		
-		threshold(_extractedImg, _thresholdedImg, 170, 255, THRESH_TOZERO);
-
-		if(m_debug) 
-			cout << "Exiting Refiner::ThresholdedImage()" << endl;
 	}
 
 }
