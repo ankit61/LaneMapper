@@ -8,16 +8,15 @@
 namespace LD {
 
 	
-		TLinkage::TLinkage(int _minSamples, int _modelParams, string _xmlFile) : 
-			Solver(_xmlFile), m_minSamples(_minSamples), m_modelParams(_modelParams), m_sampler(std::make_unique<UniformSampler>(m_xmlFileName)), 
-			m_outlierRejector(std::make_unique<MaxDiffOR>(_minSamples, m_xmlFileName)) { 
-			
+	TLinkage::TLinkage(int _minSamples, int _modelParams, string _xmlFile) : 
+		Solver(_xmlFile), m_minSamples(_minSamples), m_modelParams(_modelParams), m_sampler(std::make_unique<UniformSampler>(m_xmlFileName)), m_outlierRejector(std::make_unique<MaxDiffOR>(_minSamples, m_xmlFileName)) { 
+
 			ParseXML(); 
 			m_foutModels.open(m_modelFile);
 			m_foutClusters.open(m_clusterFile);
 
 		}
-	
+
 	void TLinkage::ParseXML() {
 		m_xml = m_xml.child("TLinkage");
 
@@ -85,10 +84,12 @@ namespace LD {
 			RejectOutliers(clusters, clusters);
 			if(m_saveClusters) {
 				m_foutClusters << m_imgName << endl;
+				m_foutClusters << clusters.size() << endl;
 				m_foutClusters << clusters << endl;
 			}
 			FitModels(data, clusters, m_models);
 			m_foutModels << m_imgName << endl;
+			m_foutModels << m_models.size() << "\t" << m_modelParams << endl;
 			for(int i = 0; i < m_models.size(); i++)
 				m_foutModels << m_models[i] << endl << endl;
 		}

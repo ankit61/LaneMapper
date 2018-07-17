@@ -26,6 +26,9 @@
 #include"GaussPreferenceFinder.h"
 #include"TukeyPreferenceFinder.h"
 
+
+//TODO: Use more compile time processing
+
 namespace LD {
 
 	using namespace Eigen;
