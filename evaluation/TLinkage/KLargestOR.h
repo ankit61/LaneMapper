@@ -25,6 +25,8 @@ namespace LD {
 						count[clusterID2Index[_clusters(i)]].second++;
 				}
 
+				m_k = std::min(m_k, int(count.size()));
+
 				std::partial_sort(count.begin(), count.begin() + m_k, count.end(), 
 				[](std::pair<ulli, ulli>& a, std::pair<ulli, ulli>& b) {
 					return a.second > b.second;	

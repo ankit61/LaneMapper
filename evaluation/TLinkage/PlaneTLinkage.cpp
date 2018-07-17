@@ -34,7 +34,7 @@ namespace LD {
 		EigenSolver<MatrixXf> solver(zeroCentered.transpose() * zeroCentered);
 		ulli minEigenValueIndex;
 		solver.eigenvalues().real().array().minCoeff(&minEigenValueIndex); //eigen values will be real as matrix is symmetric
-		_model = ArrayXf(m_modelParams);
+		_model.resize(m_modelParams);
 		_model.head(3) = solver.eigenvectors().col(minEigenValueIndex).real();
 		_model.head(3).matrix().normalize();
 		_model(3) = - _model.head(3).matrix().dot(means.matrix());
