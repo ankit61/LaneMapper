@@ -4,6 +4,7 @@
 
 #include"Refiner.h"
 #include"KPercentExtractor.h"
+#include"LaneExtractor.h"
 
 #include"VeloProjector.h"
 #include"ResultIntersector.h"
@@ -16,6 +17,8 @@
 #include"TLinkage/SurfaceTLinkage.h"
 #include"TLinkage/RoadTLinkage.h"
 #include"TLinkage/Line3DTLinkage.h"
+
+#include"DBScan.h"
 
 #include<pugixml.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -41,6 +44,8 @@ int main(int argc, char* argv[]) {
 		string instance(xml.document_element().child("Solvers").child("Refiner").child("SolverInstance").attribute("instance").as_string());
 		if(boost::iequals(instance, "KPercentExtractor"))
 			solverPtr = std::make_unique<KPercentExtractor>(argv[1]);
+		else if(boost::iequals(instance, "LaneExtractor"))
+			solverPtr = std::make_unique<LaneExtractor>(argv[1]);
 	}
 	else if(boost::iequals(solver, "VeloProjector")) {
 		string instance(xml.document_element().child("Solvers").child("VeloProjector").child("SolverInstance").attribute("instance").as_string());
@@ -67,6 +72,9 @@ int main(int argc, char* argv[]) {
 			solverPtr = std::make_unique<Line3DTLinkage>(argv[1]);
 		else
 			throw runtime_error("No such TLinkage model implemented: " + model);
+	}
+	else if(boost::iequals(solver, "DBScan")) {
+		solverPtr = std::make_unique<DBScan>(argv[1]);
 	}
 	else
 		throw runtime_error("No such solver implemented: " + solver);
