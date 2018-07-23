@@ -3,7 +3,6 @@
 #include"../Utilities.h"
 namespace LD {
 
-
 	void DBScan::ParseXML() {
 		if(m_debug)	
 			cout << "Entering DBScan::ParseXML()" << endl;
@@ -11,12 +10,15 @@ namespace LD {
 		m_xml = m_xml.child("DBScan");
 
 		m_eps 				= m_xml.attribute("eps").as_float();
-		m_minPts 			= m_xml.attribute("minPts").as_int();
+		m_maxMinPts 		= m_xml.attribute("maxMinPts").as_int();
+		m_minMinPts 		= m_xml.attribute("minMinPts").as_int();
+		m_minX	 			= m_xml.attribute("minX").as_int(0);
 		m_dataFile			= m_xml.attribute("dataFile").as_string();
 		m_outputFile		= m_xml.attribute("outputFile").as_string();
 		m_shouldTranspose 	= m_xml.attribute("shouldTranspose").as_bool();
+		m_declineSlope		= m_xml.attribute("declineSlope").as_float(0);
 
-		if(!m_eps || !m_minPts || m_dataFile.empty() || m_outputFile.empty())
+		if(!m_eps || !m_maxMinPts || m_dataFile.empty() || m_outputFile.empty())
 			throw runtime_error("at least one of the following attributes missing in DBScan node: eps, minPts, dataFile, outputFile, shouldTranspose");
 		
 		if(m_debug)	
@@ -75,8 +77,6 @@ namespace LD {
 
 	DBScan::ulli DBScan::GetNeighbors(const Eigen::ArrayXXf& _data, const ulli& _ptIndex, vector<ulli>& _neighborIndices, const std::unordered_set<ulli>& _uniques) {
 		
-		if(m_debug)
-			cout << "Entering DBScan::GetNeighbors()" << endl;
 		ulli numNeighbors = 0;
 		for(ulli c = 0; c < _data.cols(); c++)
 			if(Distance(_data.col(c), _data.col(_ptIndex)) < m_eps && c != _ptIndex) {
@@ -85,8 +85,6 @@ namespace LD {
 				numNeighbors++;
 			}
 		
-		if(m_debug)
-			cout << "Exiting DBScan::GetNeighbors()" << endl;
 
 		return numNeighbors;
 	}
@@ -105,7 +103,7 @@ namespace LD {
 			GetNeighbors(_data, c, neighborIndices);
 			std::unordered_set<ulli> uniqueNeighbors(neighborIndices.begin(), neighborIndices.end());
 
-			if(uniqueNeighbors.size() < m_minPts) {
+			if(uniqueNeighbors.size() < std::max(float(m_minMinPts), -m_declineSlope * std::max(float(0), _data(0, c) - m_minX) + m_maxMinPts)) {
 				_labels[c] = NOISE;
 				continue;
 			}
@@ -122,7 +120,7 @@ namespace LD {
 				_labels[neighborIndices[i]] = numClusters;
 				vector<ulli> newNeighborIndices;
 				ulli numNeighbors = GetNeighbors(_data, neighborIndices[i], newNeighborIndices, uniqueNeighbors);
-				if(numNeighbors >= m_minPts) {
+				if(numNeighbors >= std::max(float(m_minMinPts), -m_declineSlope * std::max(float(0), _data(0, neighborIndices[i]) - m_minX) + m_maxMinPts)) {
 					neighborIndices.insert(neighborIndices.end(), newNeighborIndices.begin(), newNeighborIndices.end());
 					uniqueNeighbors.insert(newNeighborIndices.begin(), newNeighborIndices.end());
 				}
@@ -132,5 +130,4 @@ namespace LD {
 		if(m_debug)
 			cout << "Exiting DBScan::Cluster()" << endl;
 	}
-
 }

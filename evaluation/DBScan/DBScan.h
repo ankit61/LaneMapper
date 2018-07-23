@@ -19,9 +19,10 @@ namespace LD {
 			void PrintOutputFile(std::ofstream& _fout, const Eigen::ArrayXXf& _data, const vector<int>& _labels);
 
 			float m_eps;
-			ulli m_minPts;
+			int m_minMinPts, m_minX, m_maxMinPts;
 			string m_dataFile, m_outputFile;
 			bool m_shouldTranspose;
+			float m_declineSlope;
 
 		public:
 			
