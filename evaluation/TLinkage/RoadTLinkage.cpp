@@ -3,8 +3,6 @@
 namespace LD {
 
 	ArrayXf RoadTLinkage::GenerateHypothesis(const vector<ArrayXf>& _samples) {
-		if(m_debug)
-			cout << "Entering RoadTLinkage::GenerateHypothesis()" << endl;
 
 		Matrix<float, 5, 5> A;
 		Matrix<float, 5, 1> B;
@@ -20,9 +18,6 @@ namespace LD {
 		}
 
 		ArrayXf hypothesis = (A.inverse() * B).array();
-
-		if(m_debug)
-			cout << "Exiting RoadTLinkage::GenerateHypothesis()" << endl;
 
 		return hypothesis;
 	}

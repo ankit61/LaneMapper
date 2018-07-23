@@ -4,6 +4,7 @@
 #include<limits>
 #include<fstream>
 #include <boost/algorithm/string/predicate.hpp>
+#include"../Utilities.h"
 
 namespace LD {
 
@@ -22,18 +23,22 @@ namespace LD {
 
 		pugi::xml_node solverInstanceNode = m_xml.child("SolverInstance");
 
-		string sampler 			= solverInstanceNode.attribute("sampler").as_string();
-		string preferenceFinder = solverInstanceNode.attribute("preferenceFinder").as_string();
-		string outlierRejector 	= solverInstanceNode.attribute("outlierRejector").as_string();
-		m_samplesPerDataPt 		= solverInstanceNode.attribute("samplesPerDataPt").as_int();
-		m_dataFile 				= solverInstanceNode.attribute("dataFile").as_string();
-		m_shouldTranspose 		= solverInstanceNode.attribute("shouldTranspose").as_bool();
-		m_modelFile 			= solverInstanceNode.attribute("modelFile").as_string();
-		m_saveClusters 			= solverInstanceNode.attribute("saveClusters").as_bool(true);
-		m_clusterFile 			= solverInstanceNode.attribute("clusterFile").as_string();
+		string sampler 			  = solverInstanceNode.attribute("sampler").as_string();
+		string preferenceFinder   = solverInstanceNode.attribute("preferenceFinder").as_string();
+		string outlierRejector 	  = solverInstanceNode.attribute("outlierRejector").as_string();
+		m_samplesPerDataPt 		  = solverInstanceNode.attribute("samplesPerDataPt").as_int();
+		m_dataFile 				  = solverInstanceNode.attribute("dataFile").as_string();
+		m_shouldTranspose 		  = solverInstanceNode.attribute("shouldTranspose").as_bool();
+		string modelFilePostfix  = solverInstanceNode.attribute("modelFilePostfix").as_string();
+		m_saveClusters 			  = solverInstanceNode.attribute("saveClusters").as_bool(true);
+		string clusterFilePostfix = solverInstanceNode.attribute("clusterFilePostfix").as_string();
+		string model 			  = solverInstanceNode.attribute("model").as_string();
+
+		m_clusterFile   = model + clusterFilePostfix; 
+		m_modelFile = model + modelFilePostfix; 
 	
-		if(sampler.empty() || preferenceFinder.empty() || outlierRejector.empty() || m_dataFile.empty() || !m_samplesPerDataPt || m_modelFile.empty() || (m_saveClusters && m_clusterFile.empty())) 
-			throw runtime_error("TLinkage SolverInstance node doesn't have one or more of the following attributes: sampler, preferenceFinder, outlierRejector, dataFile, samplesPerDataPt, modelFile, saveClusters, clusterFile");
+		if(sampler.empty() || preferenceFinder.empty() || outlierRejector.empty() || m_dataFile.empty() || !m_samplesPerDataPt || modelFilePostfix.empty() || (m_saveClusters && clusterFilePostfix.empty())) 
+			throw runtime_error("TLinkage SolverInstance node doesn't have one or more of the following attributes: sampler, preferenceFinder, outlierRejector, dataFile, samplesPerDataPt, modelFilePostfix, saveClusters, clusterFilePostfix");
 			
 		//Set Sampler
 		if(boost::iequals(sampler, "Uniform"))
@@ -75,49 +80,33 @@ namespace LD {
 		while(fin >> m_imgName) {
 			ArrayXXf data, sampleIndices, hypotheses, residuals, pref;
 			ArrayXf clusters;
-			ReadDataFromFile(fin, data);
-			Sample(data, sampleIndices, m_samplesPerDataPt * data.cols());
-			GenerateHypotheses(data, sampleIndices, hypotheses);
-			FindResiduals(data, hypotheses, residuals);
-			FindPreferences(residuals, pref);
-			Cluster(pref, clusters);
-			RejectOutliers(clusters, clusters);
-			if(m_saveClusters) {
-				m_foutClusters << m_imgName << endl;
-				m_foutClusters << clusters.size() << endl;
-				m_foutClusters << clusters << endl;
+			vector<ArrayXf> models;
+			ReadEigenMatFromFile(fin, data, m_shouldTranspose);
+			if(data.cols() > m_minSamples) {
+				Sample(data, sampleIndices, m_samplesPerDataPt * data.cols());
+				GenerateHypotheses(data, sampleIndices, hypotheses);
+				FindResiduals(data, hypotheses, residuals);
+				FindPreferences(residuals, pref);
+				Cluster(pref, clusters);
+				RejectOutliers(clusters, clusters);
+				if(m_saveClusters) {
+					m_foutClusters << m_imgName << endl;
+					m_foutClusters << clusters.size() << endl;
+					m_foutClusters << clusters << endl;
+				}
+				FitModels(data, clusters, models);
 			}
-			FitModels(data, clusters, m_models);
 			m_foutModels << m_imgName << endl;
-			m_foutModels << m_models.size() << "\t" << m_modelParams << endl;
-			for(int i = 0; i < m_models.size(); i++)
-				m_foutModels << m_models[i] << endl << endl;
+			m_foutModels << models.size() << "\t" << m_modelParams << endl;
+			for(int i = 0; i < models.size(); i++)
+				m_foutModels << models[i] << endl << endl;
 		}
 		
 		if(m_debug)
 			cout << "Exiting TLinkage::Run()" << endl;
 	}
 
-	void TLinkage::ReadDataFromFile(std::ifstream& _fin, ArrayXXf& _data) {
-		if(m_debug)
-			cout << "Entering TLinkage::ReadDataFromFile()" << endl;
-
-		ulli rows, cols;
-		_fin >> rows >> cols;
-
-		_data.resize(rows, cols);
-		for(ulli r = 0; r < rows; r++)
-			for(ulli c = 0; c < cols; c++)
-				_fin >> _data(r, c);
-
-		if(m_shouldTranspose)
-			_data.transposeInPlace();
-		
-		if(m_debug) {
-			cout << "Read matrix of size: " << _data.rows() << "x" << _data.cols() << endl;
-			cout << "Exiting TLinkage::ReadDataFromFile()" << endl;
-		}
-	}
+	
 
 	void TLinkage::SetSampler(SamplingMethod _method) {
 		switch(_method) {

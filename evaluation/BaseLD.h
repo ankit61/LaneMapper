@@ -5,6 +5,7 @@
 #include<vector>
 #include<string>
 #include<algorithm>
+#include<math.h>
 #include<pugixml.hpp>
 #include<exception>
 
@@ -18,7 +19,6 @@ namespace LD {
 
 	class BaseLD {
 		protected:
-			typedef unsigned long long int ulli;
 			string m_xmlFileName;
 			bool m_debug; //to be changed
 			pugi::xml_node m_xml;
@@ -36,6 +36,9 @@ namespace LD {
 			}
 			
 			virtual void ParseXML() = 0;
+
+		public:
+			typedef unsigned long long int ulli;
 
 			BaseLD(string _file) : m_xmlFileName(_file) {
 				ParseXML(_file); //will call above function

@@ -78,7 +78,7 @@ namespace LD {
 
 			if(inputImg.empty())
 				throw std::runtime_error("Can't open " + inputImgName);
-			else 
+			else if(m_debug)
 				cout << "Successfully read input image: " << inputImgName << endl;
 
 			ReadVeloData(m_veloRoot + "/" + line.substr(0, line.size() - 3) + "bin", veloPoints);

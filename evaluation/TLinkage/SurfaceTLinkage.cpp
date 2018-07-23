@@ -3,8 +3,6 @@
 namespace LD {
 
 	ArrayXf SurfaceTLinkage::GenerateHypothesis(const vector<ArrayXf>& _samples) {
-		if(m_debug)
-			cout << "Entering SurfaceTLinkage::GenerateHypothesis()" << endl;
 
 		Matrix<float, 10, 10> A;
 		Matrix<float, 10, 1> B;
@@ -24,12 +22,7 @@ namespace LD {
 			B(r) = _samples[r](2); //z
 		}
 
-		ArrayXf hypothesis = (A.inverse() * B).array();
-
-		if(m_debug)
-			cout << "Exiting SurfaceTLinkage::GenerateHypothesis()" << endl;
-
-		return hypothesis;
+		return (A.inverse() * B).array();
 	}
 
 	double SurfaceTLinkage::Distance(ArrayXf _dataPoint, ArrayXf _model) {

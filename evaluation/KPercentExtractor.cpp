@@ -10,6 +10,17 @@ namespace LD {
 			throw runtime_error("at least one of the following attribute is missing: k");
 	}
 	
+	void KPercentExtractor::Preprocess(const Mat& _original, const Mat& _segImg, Mat& _preprocessed) {
+		if(m_debug)
+			cout << "Entering KPercentExtractor::Preprocess()" << endl;
+
+			cvtColor(_original, _preprocessed, COLOR_RGB2GRAY);
+			bitwise_and(_preprocessed, _segImg, _preprocessed);
+		
+		if(m_debug)
+			cout << "Exiting KPercentExtractor::Preprocess()" << endl;
+	}
+	
 	void KPercentExtractor::Refine(const Mat& _extractedImg, Mat& _refinedImg) {
 		
 		if(m_debug)	

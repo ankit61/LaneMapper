@@ -67,11 +67,9 @@ namespace LD {
 			if(m_debug)
 				cout << "Successfully opened " << fullImgName << " and " << fullSegName << endl;
 			
-			Mat grayOriginal, refinedImg;
-			cvtColor(original, grayOriginal, COLOR_RGB2GRAY);
-			
-			bitwise_and(grayOriginal, segImg, grayOriginal);
-			Refine(grayOriginal, refinedImg);
+			Mat preprocessed, refinedImg;
+			Preprocess(original, segImg, preprocessed);
+			Refine(preprocessed, refinedImg);
 			
 			imwrite(m_refinedRoot + "/" + m_refinedImgPrefix + m_imgBaseName, refinedImg);
 			
@@ -79,15 +77,14 @@ namespace LD {
 				Mat regions, overlayed;
 				string overlayedName = m_refinedRoot + "/" + m_vizImgPrefix + m_imgBaseName;
 				vector<Mat> channels;
-				channels.push_back(Mat::zeros(refinedImg.size(), CV_8U));
-				channels.push_back(Mat::zeros(refinedImg.size(), CV_8U));
 				channels.push_back(refinedImg);
+				channels.push_back(Mat::zeros(refinedImg.size(), CV_8U));
+				channels.push_back(Mat::zeros(refinedImg.size(), CV_8U));
 				merge(channels, regions);
 				addWeighted(regions, 0.5, original, 0.5, 0, overlayed);
 
 				imwrite(overlayedName, overlayed);
-			}
-			
+			}	
 		}
 		
 		if(m_debug)

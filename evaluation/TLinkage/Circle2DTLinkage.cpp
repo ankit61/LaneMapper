@@ -3,8 +3,6 @@
 namespace LD {
 
 	ArrayXf Circle2DTLinkage::GenerateHypothesis(const vector<ArrayXf>& _samples) {
-		if(m_debug)
-			cout << "Entering Circle2DTLinkageTLinkage::GenerateHypothesis()" << endl;
 
 		ArrayXf hypothesis(m_modelParams); 
 
@@ -24,9 +22,6 @@ namespace LD {
 		hypothesis(1) = - hypothesis(1) / 2; //y center
 		hypothesis(2) = std::sqrt(hypothesis.head(2).matrix().squaredNorm() - hypothesis(2)); //radius
 
-		if(m_debug)
-			cout << "Exiting Circle2DTLinkageTLinkage::GenerateHypothesis()" << endl;
-		
 		return hypothesis;
 	}
 

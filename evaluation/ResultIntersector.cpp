@@ -11,9 +11,12 @@ namespace LD {
 		m_outputFile	= m_xml.attribute("outputFile").as_string();
 		m_saveVizImg	= m_xml.attribute("saveVizImg").as_bool();
 		m_vizImgPrefix	= m_xml.attribute("vizImgPrefix").as_string();
+		m_maxWidth		= m_xml.attribute("maxWidth").as_int();
+		m_maxLength		= m_xml.attribute("maxLength").as_int();
+		m_printOnly2D	= m_xml.attribute("printOnly2D").as_bool(false);
 
-		if(m_segRoot.empty() || m_refinedRoot.empty() || m_segImgPrefix.empty() || m_refImgPrefix.empty() || m_outputFile.empty() || (m_saveVizImg && m_vizImgPrefix.empty()))
-			throw runtime_error("at least one of the following attributes are missing in ResultIntersector node: segRoot, refinedRoot, outputFile, segImgPrefix, refImgPrefix, vizImgPrefix");
+		if(m_segRoot.empty() || m_refinedRoot.empty() || m_segImgPrefix.empty() || m_refImgPrefix.empty() || m_outputFile.empty() || (m_saveVizImg && m_vizImgPrefix.empty()) || !m_maxWidth || !m_maxLength)
+			throw runtime_error("at least one of the following attributes are missing in ResultIntersector node: segRoot, refinedRoot, outputFile, segImgPrefix, refImgPrefix, vizImgPrefix, maxWidth, maxHeight");
 	}
 
 	void ResultIntersector::ProcessProjectedLidarPts(const Eigen::MatrixXf& _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, Mat& _inputImg) {
@@ -29,12 +32,12 @@ namespace LD {
 
 		if(segImg.empty())
 			throw std::runtime_error("Can't open " + segImgName);
-		else 
+		else if(m_debug) 
 			cout << "Successfully read segmented image: " << segImgName << endl;
 
 		if(refinedImg.empty())
 			throw std::runtime_error("Can't open " + refImgName);
-		else 
+		else if(m_debug)
 			cout << "Successfully read refined image: " << refImgName << endl;
 
 		double thresh = OtsuThresholdRoad(_veloImg, segImg, _reflectivity);
@@ -55,17 +58,19 @@ namespace LD {
 		if(m_debug)
 			cout << "Entering ResultIntersector::IntersectIn3D()" << endl;
 
-		ulli rows = 0, cols = 3;
+		ulli rows = 0, cols = m_printOnly2D ? 2 : 3;
 
 		//find number of rows
 
 		for(int i = 0; i < _veloImg.rows(); i++) {
-			int x = _veloImg(i, 0), y = _veloImg(i, 1);
+			int xImg = _veloImg(i, 0), yImg = _veloImg(i, 1);
+			float xLidar = _veloPoints.at<float>(i, 0), yLidar = _veloPoints.at<float>(i, 1);
 			float reflect = _reflectivity.at<float>(i, 0);
-			if(isValid(y, x, _refinedImg.rows, _refinedImg.cols) && _refinedImg.at<unsigned char>(y, x) && reflect > _thresh) { 
+			
+			if(isValid(yImg, xImg, _refinedImg.rows, _refinedImg.cols) && std::abs(yLidar) <= m_maxWidth && std::abs(xLidar) <= m_maxLength && _refinedImg.at<unsigned char>(yImg, xImg) && reflect > _thresh) { 
 				rows++;
 				if(m_saveVizImg)
-					circle(_vizImg, Point(x, y), 5, Scalar(int(255 * reflect), 0, 0));
+					circle(_vizImg, Point(xImg, yImg), 5, Scalar(int(255 * reflect), 0, 0));
 			}
 		}
 
@@ -74,11 +79,16 @@ namespace LD {
 		//print actual coordinates now
 		
 		for(int i = 0; i < _veloImg.rows(); i++) {
-			int x = _veloImg(i, 0), y = _veloImg(i, 1);
+			int xImg = _veloImg(i, 0), yImg = _veloImg(i, 1);
+			float xLidar = _veloPoints.at<float>(i, 0), yLidar = _veloPoints.at<float>(i, 1);
 			float reflect = _reflectivity.at<float>(i, 0);
-			if(isValid(y, x, _refinedImg.rows, _refinedImg.cols) && _refinedImg.at<unsigned char>(y, x) && reflect > _thresh) { 
-				m_fout << _veloPoints.at<float>(i, 0) << "\t" << _veloPoints.at<float>(i, 1) << "\t" << _veloPoints.at<float>(i, 2) << endl;
+			if(isValid(yImg, xImg, _refinedImg.rows, _refinedImg.cols) && std::abs(yLidar) <= m_maxWidth && std::abs(xLidar) <= m_maxLength && _refinedImg.at<unsigned char>(yImg, xImg) && reflect > _thresh) { 
+				if(m_printOnly2D)
+					m_fout << xLidar << "\t" << yLidar << endl;
+				else
+					m_fout << xLidar << "\t" << yLidar << "\t" << _veloPoints.at<float>(i, 2) << endl;
 			}
+	
 		}
 
 		m_fout.flush();
@@ -97,7 +107,7 @@ namespace LD {
 		vector<unsigned char> onRoadRef;
 		onRoadRef.reserve(scaledReflectivity.rows);
 
-		for(long long int i = 0; i < scaledReflectivity.rows; i++) {
+		for(ulli i = 0; i < scaledReflectivity.rows; i++) {
 			int x = _veloImg(i, 0), y = _veloImg(i, 1);
 			int reflect = scaledReflectivity.at<unsigned char>(i, 0);
 			if(isValid(y, x, _segImg.rows, _segImg.cols) && _segImg.at<unsigned char>(y, x)) 

@@ -9,14 +9,10 @@
 #ifndef REFINER_H_
 #define REFINER_H_
 
-#include<string>
 //<libgen.h> is included in Linux; it's only used to extract base name from full file path
 //user can easily code this functionality on other platforms manually
 #include<libgen.h>		
-#include<math.h>
-#include<vector>
 #include<queue>
-#include<iostream>
 #include<fstream>
 #include<unordered_set>
 #include<opencv2/core/core.hpp>
@@ -24,7 +20,6 @@
 #include<opencv2/ml/ml.hpp>
 #include<opencv2/imgproc/imgproc.hpp>
 #include<limits>
-#include<algorithm>
 #include "FloodFill.h"
 
 #include"Solver.h"
@@ -32,10 +27,6 @@
 namespace LD {
 
 	using namespace cv;
-	using std::string;
-	using std::vector;
-	using std::cout;
-	using std::endl;
 
 	class Refiner : public Solver {
 		protected:
@@ -62,8 +53,10 @@ namespace LD {
 			bool m_saveVizImg;
 			string m_refinedImgPrefix;
 
+			virtual void Preprocess(const Mat& _original, const Mat& _segImg, Mat& _preprocessed) = 0;
+			
 			/**
-			 * \brief fits the image to a gaussian and thresholds the image based upon its intensity values
+			 * \brief extracts lanes from segmented image
 			 * \param _extractedImg image which is black except where there is road
 			 * \param _refinedImg stores output 
 			 */

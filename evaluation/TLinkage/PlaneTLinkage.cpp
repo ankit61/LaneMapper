@@ -5,17 +5,12 @@
 namespace LD {
 
 	ArrayXf PlaneTLinkage::GenerateHypothesis(const vector<ArrayXf>& _samples) {
-		if(m_debug)
-			cout << "Entering PlaneTLinkage::GenerateHypothesis()" << endl;
 		
 		ArrayXf hypothesis(m_modelParams); 
 
 		hypothesis.head(3).matrix() = (_samples[0].head<3>() - _samples[1].head<3>()).matrix().cross((_samples[2].head<3>() - _samples[0].head<3>()).matrix());
 		hypothesis.head(3).matrix().normalize();
 		hypothesis(3) = - hypothesis(0) * _samples[0](0) - hypothesis(1) * _samples[0](1) - hypothesis(2) * _samples[0](2);
-
-		if(m_debug)
-			cout << "Exiting PlaneTLinkage::GenerateHypothesis()" << endl;
 
 		return hypothesis;
 	}

@@ -57,8 +57,6 @@ namespace LD {
 
 			virtual void Run() override;
 
-			void ReadDataFromFile(std::ifstream& fin, ArrayXXf& _data);
-
 			virtual void Sample(const ArrayXXf& _data, ArrayXXf& _sampleIndices, 
 					const ulli& _numSamples);
 
@@ -100,7 +98,6 @@ namespace LD {
 
 			std::unique_ptr<Sampler> m_sampler;
 			std::unique_ptr<OutlierRejector> m_outlierRejector;
-			vector<ArrayXf> m_models;
 			std::unique_ptr<PreferenceFinder> m_preferenceFinder;
 			pugi::xml_node m_TLinkageNode;
 			int m_minSamples, m_modelParams;

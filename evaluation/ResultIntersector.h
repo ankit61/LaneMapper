@@ -4,6 +4,8 @@
 #include"VeloProjector.h"
 #include"Utilities.h"
 
+//TODO: Remove repetition of code when counting number of rows in IntersectIn3D
+
 namespace LD {
 	class ResultIntersector : public VeloProjector {
 		public:
@@ -19,6 +21,8 @@ namespace LD {
 			string m_outputFile;
 			std::ofstream m_fout;
 			bool m_saveVizImg;
+			bool m_printOnly2D;
+			int m_maxWidth, m_maxLength;
 			
 			virtual void ProcessProjectedLidarPts(const Eigen::MatrixXf& _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, Mat& _inputImg) override;
 			

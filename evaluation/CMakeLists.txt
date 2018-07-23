@@ -31,12 +31,11 @@ link_directories(
 # set complile flag
 SET(LIBS "-lcaffe -lglog -lboost_system -lopencv_highgui -lopencv_imgproc -lopencv_core -lpugixml")
 
-SET(GCC_COVERAGE_COMPILE_FLAGS "-Wall -Wno-sign-compare -MMD -MP -pthread -fPIC -g")
+SET(GCC_COVERAGE_COMPILE_FLAGS "-Wall -Wno-sign-compare -MMD -MP -pthread -fPIC -g -O2")
 
 add_definitions(
 	-DCAFFE_VERSION=1.0.0-rc3 
 #	-DNDEBUG 
-	-O2 
 	-DUSE_OPENCV 
 	-DUSE_LEVELDB 
 	-DUSE_LMDB 
@@ -48,15 +47,25 @@ add_executable(
 	main.cpp 
 	Segmenter.cpp 
 	Refiner.cpp 
+	KPercentExtractor.cpp
+	LaneExtractor.cpp
 	VeloProjector.cpp 
 	ResultIntersector.cpp 
 	SurfaceDataMaker.cpp 
-	Utilities.cpp
 	TLinkage/TLinkage.cpp
 	TLinkage/Line2DTLinkage.cpp
 	TLinkage/PlaneTLinkage.cpp
 	TLinkage/Circle2DTLinkage.cpp
 	TLinkage/SurfaceTLinkage.cpp
+	TLinkage/RoadTLinkage.cpp
+	TLinkage/Line3DTLinkage.cpp
+	TLinkage/KLargestOR.cpp
+	TLinkage/MaxDiffOR.cpp
+	TLinkage/UniformSampler.cpp
+	TLinkage/DistBasedSampler.cpp
+	FloodFill.cpp
+	Utilities.cpp
+	DBScan.cpp
 )
 
 target_link_libraries(LaneDetection ${OpenCV_LIBS} ${LIBS})

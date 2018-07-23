@@ -4,18 +4,12 @@
 namespace LD {
 
 	ArrayXf Line3DTLinkage::GenerateHypothesis(const vector<ArrayXf>& _samples) {
-		if(m_debug)
-			cout << "Entering Line3DTLinkage::GenerateHypothesis()" << endl;
 
 		ArrayXf hypothesis(m_modelParams); 
 
 		hypothesis.head<3>() = _samples[0];
 		hypothesis.tail<3>() = (_samples[1] - _samples[0]).matrix().normalized();
 		
-
-		if(m_debug)
-			cout << "Exiting Line3DTLinkage::GenerateHypothesis()" << endl;
-
 		return hypothesis;
 	}
 
