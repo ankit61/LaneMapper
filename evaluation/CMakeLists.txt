@@ -65,7 +65,7 @@ add_executable(
 	TLinkage/DistBasedSampler.cpp
 	FloodFill.cpp
 	Utilities.cpp
-	DBScan.cpp
+	DBScan/DBScan.cpp
 )
 
 target_link_libraries(LaneDetection ${OpenCV_LIBS} ${LIBS})

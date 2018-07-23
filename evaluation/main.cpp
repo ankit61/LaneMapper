@@ -18,7 +18,7 @@
 #include"TLinkage/RoadTLinkage.h"
 #include"TLinkage/Line3DTLinkage.h"
 
-#include"DBScan.h"
+#include"DBScan/DBScan.h"
 
 #include<pugixml.hpp>
 #include <boost/algorithm/string/predicate.hpp>

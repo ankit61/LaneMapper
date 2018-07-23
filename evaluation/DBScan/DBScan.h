@@ -2,7 +2,7 @@
 #define DBSCAN_H_
 
 #include<Eigen/Dense>
-#include"Solver.h"
+#include"../Solver.h"
 #include<unordered_set>
 
 namespace LD {
