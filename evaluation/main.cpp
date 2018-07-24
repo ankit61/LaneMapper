@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
 		throw runtime_error(string("xml error") + status.description());
 	
 	string solver = xml.document_element().child("Main").attribute("solver").as_string();
-	std::unique_ptr<LD::Solver> solverPtr;
+	std::unique_ptr<LD::Solver> solverPtr = nullptr;
 
 	if(boost::iequals(solver, "Segmenter"))
 		solverPtr = std::make_unique<Segmenter>(argv[1]);
@@ -62,9 +62,21 @@ int main(int argc, char* argv[]) {
 		solverPtr = std::make_unique<Line3DTLinkage>(argv[1]);
 	else if(boost::iequals(solver, "DBScan"))
 		solverPtr = std::make_unique<DBScan>(argv[1]);
-	else
+	
+	if(solverPtr)
+		solverPtr->Run();
+	else if(boost::iequals(solver, "all")) {
+		solverPtr = std::make_unique<Segmenter>(argv[1]);
+		solverPtr->Run();
+		solverPtr = std::make_unique<KPercentExtractor>(argv[1]);
+		solverPtr->Run();
+		solverPtr = std::make_unique<ResultIntersector>(argv[1]);
+		solverPtr->Run();
+		solverPtr = std::make_unique<Line3DTLinkage>(argv[1]);
+		solverPtr->Run();
+	}
+	else	
 		throw runtime_error("No such solver implemented: " + solver);
 
-	solverPtr->Run();
 
 }

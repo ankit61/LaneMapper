@@ -29,16 +29,12 @@ namespace LD {
 		m_samplesPerDataPt 		  = solverInstanceNode.attribute("samplesPerDataPt").as_int();
 		m_dataFile 				  = solverInstanceNode.attribute("dataFile").as_string();
 		m_shouldTranspose 		  = solverInstanceNode.attribute("shouldTranspose").as_bool();
-		string modelFilePostfix  = solverInstanceNode.attribute("modelFilePostfix").as_string();
+		m_modelFile				  = solverInstanceNode.attribute("modelFile").as_string();
 		m_saveClusters 			  = solverInstanceNode.attribute("saveClusters").as_bool(true);
-		string clusterFilePostfix = solverInstanceNode.attribute("clusterFilePostfix").as_string();
-		string model 			  = solverInstanceNode.attribute("model").as_string();
+		m_clusterFile 			  = solverInstanceNode.attribute("clusterFile").as_string();
 
-		m_clusterFile   = model + clusterFilePostfix; 
-		m_modelFile = model + modelFilePostfix; 
-	
-		if(sampler.empty() || preferenceFinder.empty() || outlierRejector.empty() || m_dataFile.empty() || !m_samplesPerDataPt || modelFilePostfix.empty() || (m_saveClusters && clusterFilePostfix.empty())) 
-			throw runtime_error("TLinkage SolverInstance node doesn't have one or more of the following attributes: sampler, preferenceFinder, outlierRejector, dataFile, samplesPerDataPt, modelFilePostfix, saveClusters, clusterFilePostfix");
+		if(sampler.empty() || preferenceFinder.empty() || outlierRejector.empty() || m_dataFile.empty() || !m_samplesPerDataPt || m_modelFile.empty() || (m_saveClusters && m_clusterFile.empty())) 
+			throw runtime_error("TLinkage SolverInstance node doesn't have one or more of the following attributes: sampler, preferenceFinder, outlierRejector, dataFile, samplesPerDataPt, modelFile, saveClusters, clusterFile");
 			
 		//Set Sampler
 		if(boost::iequals(sampler, "Uniform"))
