@@ -13,7 +13,7 @@
 
 			<LaneExtractor minDiff="10" peakNeighbors="5" minArea="10" maxArea="10000" minWidth="5" maxWidth="100" minLength="10"/>
 
-			<SolverInstance instance="LaneExtractor" dataRoot = "/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data/" dataFile="images.txt" segRoot="/media/sf_Autonomous_Driving/HistEqualized/Segmented/" refinedRoot="/media/sf_Autonomous_Driving/ExtractedLanes/" saveVizImg="true" vizImgPrefix="overlayed_" refinedImgPrefix="refined_"/>
+			<SolverInstance dataRoot = "/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data/" dataFile="images.txt" segRoot="/media/sf_Autonomous_Driving/HistEqualized/Segmented/" refinedRoot="/media/sf_Autonomous_Driving/ExtractedLanes/" saveVizImg="true" vizImgPrefix="overlayed_" refinedImgPrefix="refined_"/>
 		</Refiner>
 		
 		<VeloProjector>
@@ -21,7 +21,7 @@
 
 			<SurfaceDataMaker segRoot="/media/sf_Autonomous_Driving/HistEqualized/Segmented/" segImgPrefix="segmented_" outputFile="lidarRoad.txt" saveVizImg="false" vizImgPrefix="lidarRoad_" minPoints="15"/>
 
-			<SolverInstance instance="SurfaceDataMaker" dataRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data/" dataFile="images.txt"  veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" calibRoot="/media/sf_Autonomous_Driving/calib" outputRoot="Lidar/" retentionFrequency="10" camNum="2" minX="5"/>
+			<SolverInstance dataRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data/" dataFile="images.txt"  veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" calibRoot="/media/sf_Autonomous_Driving/calib" outputRoot="/media/sf_Autonomous_Driving/Lidar/" retentionFrequency="5" camNum="2" minX="5"/>
 		</VeloProjector>
 		
 		<TLinkage>
@@ -37,6 +37,7 @@
 				<Surface/>
 				<Road/>
 				<Line3D/>
+				<BSpline/>
 			</Models>
 
 			<PreferenceFinders inlierThreshold="1">
@@ -51,14 +52,14 @@
 				<KLargest k="2"/>
 			</OutlierRejectors>
 
-			<SolverInstance model="Line3D" dataFile="Lidar/intersected3DPts.txt" shouldTranspose="true"  modelFilePostfix="Models.txt" saveClusters="true" clusterFilePostfix="Clusters.txt" preferenceFinder="Exp" sampler="PreferNear" outlierRejector="KLargest" samplesPerDataPt="5"/>
+			<SolverInstance dataFile="Lidar/intersected3DPts.txt" shouldTranspose="true"  modelFilePostfix="Models.txt" saveClusters="true" clusterFilePostfix="Clusters.txt" preferenceFinder="Exp" sampler="PreferNear" outlierRejector="KLargest" samplesPerDataPt="5"/>
 
 		</TLinkage>
 
-		<DBScan eps="2" minPts="7" dataFile="/media/sf_Autonomous_Driving/Lidar/lidarRoad.txt" outputFile="/media/sf_Autonomous_Driving/dbscanRoad.txt" shouldTranspose="true"/>
+		<DBScan eps="2" maxMinPts="70" minMinPts="5" minX="6" declineSlope="3.5" dataFile="/media/sf_Autonomous_Driving/Lidar/lidarRoad.txt" outputFile="test.txt" shouldTranspose="true"/>
 
 	</Solvers>
 
-	<Main solver="DBScan" debug="true"/>
+	<Main solver="Line3DTLinkage" debug="true"/>
 
 </Document>

@@ -40,42 +40,28 @@ int main(int argc, char* argv[]) {
 
 	if(boost::iequals(solver, "Segmenter"))
 		solverPtr = std::make_unique<Segmenter>(argv[1]);
-	else if(boost::iequals(solver, "Refiner")) {
-		string instance(xml.document_element().child("Solvers").child("Refiner").child("SolverInstance").attribute("instance").as_string());
-		if(boost::iequals(instance, "KPercentExtractor"))
-			solverPtr = std::make_unique<KPercentExtractor>(argv[1]);
-		else if(boost::iequals(instance, "LaneExtractor"))
-			solverPtr = std::make_unique<LaneExtractor>(argv[1]);
-	}
-	else if(boost::iequals(solver, "VeloProjector")) {
-		string instance(xml.document_element().child("Solvers").child("VeloProjector").child("SolverInstance").attribute("instance").as_string());
-		if(boost::iequals(instance, "ResultIntersector"))
-			solverPtr = std::make_unique<ResultIntersector>(argv[1]);
-		else if(boost::iequals(instance, "SurfaceDataMaker"))
-			solverPtr = std::make_unique<SurfaceDataMaker>(argv[1]);	
-		else
-			throw runtime_error("No such VeloProjector instance implemented: " + instance);
-	}
-	else if(boost::iequals(solver, "TLinkage")) {
-		string model(xml.document_element().child("Solvers").child("TLinkage").child("SolverInstance").attribute("model").as_string());
-		if(boost::iequals(model, "Line2D"))
-			solverPtr = std::make_unique<Line2DTLinkage>(argv[1]);
-		else if(boost::iequals(model, "Plane"))
-			solverPtr = std::make_unique<PlaneTLinkage>(argv[1]);
-		else if(boost::iequals(model, "Circle2D"))
-			solverPtr = std::make_unique<Circle2DTLinkage>(argv[1]);
-		else if(boost::iequals(model, "Surface"))
-			solverPtr = std::make_unique<SurfaceTLinkage>(argv[1]);
-		else if(boost::iequals(model, "Road"))
-			solverPtr = std::make_unique<RoadTLinkage>(argv[1]);
-		else if(boost::iequals(model, "Line3D"))
-			solverPtr = std::make_unique<Line3DTLinkage>(argv[1]);
-		else
-			throw runtime_error("No such TLinkage model implemented: " + model);
-	}
-	else if(boost::iequals(solver, "DBScan")) {
+	else if(boost::iequals(solver, "KPercentExtractor"))
+		solverPtr = std::make_unique<KPercentExtractor>(argv[1]);
+	else if(boost::iequals(solver, "LaneExtractor"))
+		solverPtr = std::make_unique<LaneExtractor>(argv[1]);
+	else if(boost::iequals(solver, "ResultIntersector"))
+		solverPtr = std::make_unique<ResultIntersector>(argv[1]);
+	else if(boost::iequals(solver, "SurfaceDataMaker"))
+		solverPtr = std::make_unique<SurfaceDataMaker>(argv[1]);	
+	else if(boost::iequals(solver, "Line2DTLinkage"))
+		solverPtr = std::make_unique<Line2DTLinkage>(argv[1]);
+	else if(boost::iequals(solver, "PlaneTLinkage"))
+		solverPtr = std::make_unique<PlaneTLinkage>(argv[1]);
+	else if(boost::iequals(solver, "Circle2DTLinkage"))
+		solverPtr = std::make_unique<Circle2DTLinkage>(argv[1]);
+	else if(boost::iequals(solver, "SurfaceTLinkage"))
+		solverPtr = std::make_unique<SurfaceTLinkage>(argv[1]);
+	else if(boost::iequals(solver, "RoadTLinkage"))
+		solverPtr = std::make_unique<RoadTLinkage>(argv[1]);
+	else if(boost::iequals(solver, "Line3DTLinkage"))
+		solverPtr = std::make_unique<Line3DTLinkage>(argv[1]);
+	else if(boost::iequals(solver, "DBScan"))
 		solverPtr = std::make_unique<DBScan>(argv[1]);
-	}
 	else
 		throw runtime_error("No such solver implemented: " + solver);
 
