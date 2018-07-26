@@ -19,7 +19,7 @@
 		<VeloProjector>
 			<ResultIntersector segRoot="/media/sf_Autonomous_Driving/HistEqualized/Segmented/" maxWidth="3" maxLength="20" refinedRoot ="/media/sf_Autonomous_Driving/ExtractedLanes" refImgPrefix="refined_" segImgPrefix="segmented_" outputFile="intersected3DPts.txt" saveVizImg="true" vizImgPrefix="intersected_" printOnly2D="false"/>
 
-			<SurfaceDataMaker segRoot="/media/sf_Autonomous_Driving/HistEqualized/Segmented/" segImgPrefix="segmented_" outputFile="lidarRoad.txt" saveVizImg="false" vizImgPrefix="lidarRoad_" minPoints="15"/>
+			<SurfaceDataMaker segRoot="/media/sf_Autonomous_Driving/HistEqualized/Segmented/" segImgPrefix="segmented_" outputFilePrefix="lidarRoad2DPts_" saveVizImg="false" vizImgPrefix="lidarRoad_" minPoints="15" printProjectedPts="true"/>
 
 			<SolverInstance dataRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data/" dataFile="images.txt"  veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" calibRoot="/media/sf_Autonomous_Driving/calib" outputRoot="/media/sf_Autonomous_Driving/Lidar/" retentionFrequency="5" camNum="2" minX="5"/>
 		</VeloProjector>
@@ -56,10 +56,12 @@
 
 		</TLinkage>
 
-		<DBScan eps="2" maxMinPts="70" minMinPts="5" minX="6" declineSlope="3.5" dataFile="/media/sf_Autonomous_Driving/Lidar/lidarRoad.txt" outputFile="/media/sf_Autonomous_Driving/dbscanRoad.txt" shouldTranspose="true"/>
+		<DBScan eps="40" maxMinPts="40" minMinPts="5" minX="6" declineSlope="0" dataRoot="/media/sf_Autonomous_Driving/Lidar" dataFile="images.txt" inputFilePrefix="lidarRoad2DPts_" outputRoot="/media/sf_Autonomous_Driving/DBScan/" outputFilePrefix="dbs_" shouldTranspose="true"/>
+
+		<LaneDetector imgRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data/" imgFile="images.txt" veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data"/>
 
 	</Solvers>
 
-	<Main solver="All" debug="true"/>
+	<Main solver="LaneDetector" debug="true"/>
 
 </Document>
