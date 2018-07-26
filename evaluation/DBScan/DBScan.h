@@ -16,11 +16,13 @@ namespace LD {
 			
 			virtual ulli GetNeighbors(const Eigen::ArrayXXf& _data, const ulli& _ptIndex, vector<ulli>& _neighborIndices, const std::unordered_set<ulli>& _uniques = std::unordered_set<ulli>()) final;
 
-			void PrintOutputFile(std::ofstream& _fout, const Eigen::ArrayXXf& _data, const vector<int>& _labels);
+			void PrintOutputFile(const string& _imageFile, const Eigen::ArrayXXf& _data, const vector<int>& _labels);
 
 			float m_eps;
 			int m_minMinPts, m_minX, m_maxMinPts;
-			string m_dataFile, m_outputFile;
+			string m_dataFile, m_dataRoot;
+			string m_outputRoot, m_outputFilePrefix;
+			string m_inputFilePrefix;
 			bool m_shouldTranspose;
 			float m_declineSlope;
 

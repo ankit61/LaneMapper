@@ -29,6 +29,8 @@ namespace LD {
 
 		m_Tr << R, T,
 			 0, 0, 0, 1;
+		
+		ComputeProjMat(m_projectionMat);
 
 		if(m_debug)
 			cout << "Exiting VeloProjector::VeloProjector() " << endl;
@@ -53,8 +55,6 @@ namespace LD {
 
 		if(m_dataRoot.empty() || m_dataFile.empty() || m_veloRoot.empty() || m_calibRoot.empty() ||  m_outputRoot.empty() || !m_retentionFrequency || (m_camNum == -1) || !m_minX)
 			throw runtime_error("at least one of the following attributes are missing in SolverInstance node of VeloProject: dataRoot, dataFile, segRoot, refinedRoot, veloRoot, calibRoot, outputRoot, retentionFrequency, camNum, minX, outputFile, segImgPrefix, refImgPrefix");
-
-//		m_ptsFile3D.open((m_outputRoot + "/" + outputFile).c_str());
 
 		if(m_debug)
 			cout << "Exiting VeloProjector::ParseXML()" << endl;
@@ -82,8 +82,7 @@ namespace LD {
 				cout << "Successfully read input image: " << inputImgName << endl;
 
 			ReadVeloData(m_veloRoot + "/" + line.substr(0, line.size() - 3) + "bin", veloPoints);
-			ComputeProjMat(projectionMat);
-			Project(projectionMat, veloPoints, veloImgPts, reflectivity);
+			Project(m_projectionMat, veloPoints, veloImgPts, reflectivity);
 			ProcessProjectedLidarPts(veloImgPts, veloPoints, reflectivity, inputImg);
 		}
 
@@ -93,7 +92,7 @@ namespace LD {
 
 
 
-	void VeloProjector::ReadVeloData(string _bin_file, Mat& _veloPoints) {
+	void VeloProjector::ReadVeloData(string _binFile, Mat& _veloPoints) {
 		//taken from KITTI website	
 		if(m_debug)
 			cout << "Entering VeloProjector::ReadVeloData() " << endl;
@@ -108,7 +107,7 @@ namespace LD {
 
 		// load point cloud
 		FILE *stream;
-		stream = fopen (_bin_file.c_str(),"rb");
+		stream = fopen(_binFile.c_str(),"rb");
 		num = fread(data,sizeof(float),num,stream) / 4;
 		for (int32_t i=0; i<num; i++) {
 			if(*px >= m_minX && (i % m_retentionFrequency) == 0) {
@@ -164,5 +163,4 @@ namespace LD {
 		if(m_debug)
 			cout << "Exiting VeloProjector::Project() " << endl;
 	}
-
 }

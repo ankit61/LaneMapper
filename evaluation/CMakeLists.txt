@@ -44,7 +44,8 @@ add_definitions(
 
 add_executable(
 	LaneDetection 
-	main.cpp 
+	main.cpp
+	LaneDetector.cpp
 	Segmenter.cpp 
 	Refiner.cpp 
 	KPercentExtractor.cpp
@@ -59,6 +60,7 @@ add_executable(
 	TLinkage/SurfaceTLinkage.cpp
 	TLinkage/RoadTLinkage.cpp
 	TLinkage/Line3DTLinkage.cpp
+	TLinkage/BSplineTLinkage.cpp
 	TLinkage/KLargestOR.cpp
 	TLinkage/MaxDiffOR.cpp
 	TLinkage/UniformSampler.cpp

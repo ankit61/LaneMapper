@@ -79,6 +79,8 @@ namespace LD {
 			string m_vizImgPrefix;
 			string m_segImgPrefix;
 
+			vector<cv::Mat> m_inputChannels;
+
 
 			/**
 			 * \brief preprocesses the input image (resizing, zero centering) so 
@@ -87,9 +89,8 @@ namespace LD {
 			 * with _input_channels as input; also assumes that member variables 
 			 * are intialized
 			 * \param _inputImg input image as given by user
-			 * \param _inputChannels output of Segmenter::WrapInputLayers() must be given here
 			 */
-			void Preprocess(const cv::Mat& _inputImg, vector<cv::Mat>* _inputChannels);
+			void Preprocess(const cv::Mat& _inputImg);
 
 			/**
 			 * \brief outputs raw output of ICNet, where every pixel value stores 0-18
@@ -109,10 +110,9 @@ namespace LD {
 			void Save(cv::Mat& _inputImg, cv::Mat& _segmentedImg);
 
 			/**
-			 * \brief makes elements of _input_channels point to input layer of network 
-			 * \param _inputChannels blank vector should be passed
+			 * \brief makes elements of m_input_channels point to input layer of network 
 			 */
-			void WrapInputLayer(vector<cv::Mat>* _inputChannels);
+			void WrapInputLayer();
 
 			virtual void ParseXML() override;
 
@@ -127,6 +127,8 @@ namespace LD {
 			 * \brief coordinates calls to other member functions and saves the final input
 			 */
 			virtual void Run() override;
+
+			virtual void operator()(const cv::Mat& _inputImg, cv::Mat& _segImg);
 
 	};
 

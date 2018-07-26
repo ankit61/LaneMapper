@@ -78,6 +78,8 @@ namespace LD {
 			 * \brief coordinates calls to other member functions and saves the final input
 			 */
 			virtual void Run() override;
+	
+			virtual void operator()(const Mat& _original, const Mat& _segImg, Mat& _refinedImg);
 		
 	};
 

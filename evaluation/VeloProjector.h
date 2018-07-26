@@ -36,10 +36,8 @@ namespace LD {
 			int m_retentionFrequency;
 			int m_camNum;
 			Mat m_veloPoints;
-			Eigen::MatrixXf m_PRect, m_Tr, m_RRect;
+			Eigen::MatrixXf m_PRect, m_Tr, m_RRect, m_projectionMat;
 			CalibDataLoader m_calibDataLoader;
-
-			virtual void ReadVeloData(string _binFile, Mat& _veloPoints);
 
 			virtual void Project(const Eigen::MatrixXf& _PVeloToImg, Mat& _veloPoints, Eigen::MatrixXf& _veloImg, Mat& _reflectivity) final;
 			
@@ -52,8 +50,10 @@ namespace LD {
 			VeloProjector(string _xmlFile);
 
 			virtual void ParseXML() override;
-			
+		
 			virtual void Run() override;
+			
+			virtual void ReadVeloData(string _binFile, Mat& _veloPoints);
 			
 	};
 

@@ -39,6 +39,18 @@ namespace LD {
 			throw runtime_error("One of the following attributes are missing in SolverInstance node of Segmenter: dataRoot, dataFile, segRoot, refinedRoot, vizImgPrefix, saveVizImg, refinedImgPrefix");
 	}
 
+	void Refiner::operator()(const Mat& _original, const Mat& _segImg, Mat& _refinedImg) {
+		if(m_debug)
+			cout << "Entering Refiner::()" << endl;
+		
+		Mat preprocessed;
+		Preprocess(_original, _segImg, preprocessed);
+		Refine(preprocessed, _refinedImg);
+
+		if(m_debug)
+			cout << "Exiting Refiner::()" << endl;
+	}
+
 	void Refiner::Run() {
 
 		if(m_debug)
@@ -67,9 +79,8 @@ namespace LD {
 			if(m_debug)
 				cout << "Successfully opened " << fullImgName << " and " << fullSegName << endl;
 			
-			Mat preprocessed, refinedImg;
-			Preprocess(original, segImg, preprocessed);
-			Refine(preprocessed, refinedImg);
+			Mat refinedImg;
+			this->operator()(original, segImg, refinedImg);
 			
 			imwrite(m_refinedRoot + "/" + m_refinedImgPrefix + m_imgBaseName, refinedImg);
 			

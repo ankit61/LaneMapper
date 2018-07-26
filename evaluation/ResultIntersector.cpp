@@ -3,7 +3,8 @@
 namespace LD {
 	
 	void ResultIntersector::ParseXML() {
-		m_xml 			= m_xml.child("ResultIntersector");
+		m_xml = m_xml.child("ResultIntersector");
+
 		m_segRoot       = m_xml.attribute("segRoot").as_string();
 		m_refinedRoot   = m_xml.attribute("refinedRoot").as_string();
 		m_segImgPrefix	= m_xml.attribute("segImgPrefix").as_string();
@@ -43,8 +44,9 @@ namespace LD {
 		double thresh = OtsuThresholdRoad(_veloImg, segImg, _reflectivity);
 		if(m_debug)
 			cout << "Threshold set to " << thresh << endl;
-		m_fout << m_imgBaseName << endl;
-		IntersectIn3D(_veloImg, _veloPoints, _reflectivity, refinedImg, thresh, _inputImg);
+		Eigen::ArrayXXf intersectedPts;
+		IntersectIn3D(_veloImg, _veloPoints, _reflectivity, refinedImg, thresh, intersectedPts, _inputImg);
+		PrintToFile(intersectedPts);
 
 		if(m_saveVizImg)
 			imwrite(m_outputRoot + "/" + m_vizImgPrefix + m_imgBaseName, _inputImg);
@@ -54,47 +56,72 @@ namespace LD {
 
 	}
 
-	void ResultIntersector::IntersectIn3D(const Eigen::MatrixXf _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, const Mat& _refinedImg, const double& _thresh, const Mat& _vizImg) {
+	void ResultIntersector::operator()(Mat& _veloPoints, const Mat& _segImg, const Mat& _refinedImg, Eigen::ArrayXXf& _intersectedPts) {
+		if(m_debug)
+			cout << "Entering ResultIntersector::()" << endl;
+		
+		Eigen::MatrixXf veloImgPts; 
+		Mat reflectivity;
+		Project(m_projectionMat, _veloPoints, veloImgPts, reflectivity);
+		double thresh = OtsuThresholdRoad(veloImgPts, _segImg, reflectivity);
+		IntersectIn3D(veloImgPts, _veloPoints, reflectivity, _refinedImg, thresh, _intersectedPts);
+
+		if(m_debug)
+			cout << "Entering ResultIntersector::()" << endl;
+	}
+
+	void ResultIntersector::IntersectIn3D(const Eigen::MatrixXf _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, const Mat& _refinedImg, const double& _thresh, Eigen::ArrayXXf& _intersectedPts) {
+		Mat test;
+		IntersectIn3D(_veloImg, _veloPoints, _reflectivity, _refinedImg, _thresh, _intersectedPts, test);
+	}
+
+	void ResultIntersector::IntersectIn3D(const Eigen::MatrixXf _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, const Mat& _refinedImg, const double& _thresh, Eigen::ArrayXXf& _intersectedPts, Mat& _vizImg) {
 		if(m_debug)
 			cout << "Entering ResultIntersector::IntersectIn3D()" << endl;
 
-		ulli rows = 0, cols = m_printOnly2D ? 2 : 3;
+		vector<vector<float> > intersectedPtsVec;
 
-		//find number of rows
-
-		for(int i = 0; i < _veloImg.rows(); i++) {
-			int xImg = _veloImg(i, 0), yImg = _veloImg(i, 1);
-			float xLidar = _veloPoints.at<float>(i, 0), yLidar = _veloPoints.at<float>(i, 1);
-			float reflect = _reflectivity.at<float>(i, 0);
-			
-			if(isValid(yImg, xImg, _refinedImg.rows, _refinedImg.cols) && std::abs(yLidar) <= m_maxWidth && std::abs(xLidar) <= m_maxLength && _refinedImg.at<unsigned char>(yImg, xImg) && reflect > _thresh) { 
-				rows++;
-				if(m_saveVizImg)
-					circle(_vizImg, Point(xImg, yImg), 5, Scalar(int(255 * reflect), 0, 0));
-			}
-		}
-
-		m_fout << rows << "\t" << cols << endl;
-
-		//print actual coordinates now
-		
-		for(int i = 0; i < _veloImg.rows(); i++) {
+		for(ulli i = 0; i < _veloImg.rows(); i++) {
 			int xImg = _veloImg(i, 0), yImg = _veloImg(i, 1);
 			float xLidar = _veloPoints.at<float>(i, 0), yLidar = _veloPoints.at<float>(i, 1);
 			float reflect = _reflectivity.at<float>(i, 0);
 			if(isValid(yImg, xImg, _refinedImg.rows, _refinedImg.cols) && std::abs(yLidar) <= m_maxWidth && std::abs(xLidar) <= m_maxLength && _refinedImg.at<unsigned char>(yImg, xImg) && reflect > _thresh) { 
 				if(m_printOnly2D)
-					m_fout << xLidar << "\t" << yLidar << endl;
+					intersectedPtsVec.push_back({xLidar, yLidar});
 				else
-					m_fout << xLidar << "\t" << yLidar << "\t" << _veloPoints.at<float>(i, 2) << endl;
+					intersectedPtsVec.push_back({xLidar, yLidar, _veloPoints.at<float>(i, 2)});
+
+				if(m_saveVizImg && !_vizImg.empty())
+					circle(_vizImg, Point(xImg, yImg), 5, Scalar(int(255 * reflect)), 0, 0);
 			}
-	
 		}
 
-		m_fout.flush();
+		_intersectedPts.resize(intersectedPtsVec.size() ? intersectedPtsVec[0].size() : 0, intersectedPtsVec.size());
+
+		for(ulli r = 0; r < _intersectedPts.rows(); r++)
+			for(ulli c = 0; c < _intersectedPts.cols(); c++)
+				_intersectedPts(r, c) = intersectedPtsVec[c][r];
 
 		if(m_debug)
 			cout << "Exiting ResultIntersector::IntersectIn3D()" << endl;
+	}
+
+	void ResultIntersector::PrintToFile(Eigen::ArrayXXf& _intersectedPts) {
+		if(m_debug)
+			cout << "Entering ResultIntersector::PrintToFile()" << endl;
+		
+		m_fout << m_imgBaseName << endl;
+		m_fout << _intersectedPts.cols() << _intersectedPts.rows() << endl;
+
+		for(ulli c = 0; c < _intersectedPts.cols(); c++) {
+			for(ulli r = 0; r < _intersectedPts.rows(); r++)
+				m_fout << _intersectedPts(r, c) << "\t";
+
+			m_fout << endl;
+		}
+
+		if(m_debug)
+			cout << "Exiting ResultIntersector::PrintToFile()" << endl;
 	}
 
 	double ResultIntersector::OtsuThresholdRoad(const Eigen::MatrixXf _veloImg, const Mat& _segImg, const Mat& _reflectivity) {

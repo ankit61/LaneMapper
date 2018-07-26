@@ -11,7 +11,6 @@ namespace LD {
 	
 	TLinkage::TLinkage(int _minSamples, int _modelParams, string _xmlFile) : 
 		Solver(_xmlFile), m_minSamples(_minSamples), m_modelParams(_modelParams), m_sampler(std::make_unique<UniformSampler>(m_xmlFileName)), m_outlierRejector(std::make_unique<MaxDiffOR>(_minSamples, m_xmlFileName)) { 
-
 			ParseXML(); 
 			m_foutModels.open(m_modelFile);
 			m_foutClusters.open(m_clusterFile);
@@ -66,6 +65,23 @@ namespace LD {
 
 	}
 
+	void TLinkage::operator()(const ArrayXXf& _data, ArrayXf& _clusters, vector<ArrayXf>& _models) {
+		if(m_debug)
+			cout << "Entering TLinkage::()" << endl;
+		
+		ArrayXXf sampleIndices, hypotheses, residuals, pref;
+		Sample(_data, sampleIndices, m_samplesPerDataPt * _data.cols());
+		GenerateHypotheses(_data, sampleIndices, hypotheses);
+		FindResiduals(_data, hypotheses, residuals);
+		FindPreferences(residuals, pref);
+		Cluster(pref, _clusters);
+		RejectOutliers(_clusters, _clusters);
+		FitModels(_data, _clusters, _models);
+
+		if(m_debug)
+			cout << "Exiting TLinkage::()" << endl;
+	}
+
 	void TLinkage::Run() {
 		if(m_debug)
 			cout << "Entering TLinkage::Run()" << endl;
@@ -79,30 +95,41 @@ namespace LD {
 			vector<ArrayXf> models;
 			ReadEigenMatFromFile(fin, data, m_shouldTranspose);
 			if(data.cols() > m_minSamples) {
-				Sample(data, sampleIndices, m_samplesPerDataPt * data.cols());
-				GenerateHypotheses(data, sampleIndices, hypotheses);
-				FindResiduals(data, hypotheses, residuals);
-				FindPreferences(residuals, pref);
-				Cluster(pref, clusters);
-				RejectOutliers(clusters, clusters);
-				if(m_saveClusters) {
-					m_foutClusters << m_imgName << endl;
-					m_foutClusters << clusters.size() << endl;
-					m_foutClusters << clusters << endl;
-				}
-				FitModels(data, clusters, models);
+				this->operator()(data, clusters, models);
+				if(m_saveClusters)
+					PrintClustersToFile(clusters, m_imgName);
+				PrintModelsToFile(models, m_imgName);	
 			}
-			m_foutModels << m_imgName << endl;
-			m_foutModels << models.size() << "\t" << m_modelParams << endl;
-			for(int i = 0; i < models.size(); i++)
-				m_foutModels << models[i] << endl << endl;
 		}
-		
+
 		if(m_debug)
 			cout << "Exiting TLinkage::Run()" << endl;
 	}
 
-	
+	void TLinkage::PrintClustersToFile(const ArrayXf& _clusters, const string& _imgName) {
+		if(m_debug)
+			cout << "Exiting TLinkage::PrintClustersToFile()" << endl;
+		
+		m_foutClusters << _imgName << endl;
+		m_foutClusters << _clusters.size() << endl;
+		m_foutClusters << _clusters << endl;
+		
+		if(m_debug)
+			cout << "Exiting TLinkage::PrintClustersToFile()" << endl;
+	}
+
+	void TLinkage::PrintModelsToFile(vector<ArrayXf> _models, const string& _imgName) {
+		if(m_debug)
+			cout << "Entering TLinkage::PrintModelsToFile()" << endl;
+		
+		m_foutModels << _imgName << endl;
+		m_foutModels << _models.size() << "\t" << m_modelParams << endl;
+		for(int i = 0; i < _models.size(); i++)
+			m_foutModels << _models[i] << endl << endl;
+		
+		if(m_debug)
+			cout << "Exiting TLinkage::PrintModelsToFile()" << endl;
+	}
 
 	void TLinkage::SetSampler(SamplingMethod _method) {
 		switch(_method) {

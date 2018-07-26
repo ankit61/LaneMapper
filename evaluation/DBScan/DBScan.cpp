@@ -1,6 +1,7 @@
 #include"DBScan.h"
 #include<fstream>
 #include"../Utilities.h"
+
 namespace LD {
 
 	void DBScan::ParseXML() {
@@ -14,12 +15,15 @@ namespace LD {
 		m_minMinPts 		= m_xml.attribute("minMinPts").as_int();
 		m_minX	 			= m_xml.attribute("minX").as_int(0);
 		m_dataFile			= m_xml.attribute("dataFile").as_string();
-		m_outputFile		= m_xml.attribute("outputFile").as_string();
+		m_dataRoot			= m_xml.attribute("dataRoot").as_string();
+		m_outputRoot		= m_xml.attribute("outputRoot").as_string();
 		m_shouldTranspose 	= m_xml.attribute("shouldTranspose").as_bool();
 		m_declineSlope		= m_xml.attribute("declineSlope").as_float(0);
+		m_inputFilePrefix 	= m_xml.attribute("inputFilePrefix").as_string();
+		m_outputFilePrefix	= m_xml.attribute("outputFilePrefix").as_string();
 
-		if(!m_eps || !m_maxMinPts || m_dataFile.empty() || m_outputFile.empty())
-			throw runtime_error("at least one of the following attributes missing in DBScan node: eps, minPts, dataFile, outputFile, shouldTranspose");
+		if(!m_eps || !m_maxMinPts || m_dataFile.empty() || m_outputFilePrefix.empty() || m_dataRoot.empty() || m_inputFilePrefix.empty())
+			throw runtime_error("at least one of the following attributes missing in DBScan node: eps, minPts, dataFile, outputFile, shouldTranspose, dataRoot, inputFilePrefix, outputRoot");
 		
 		if(m_debug)	
 			cout << "Exiting DBScan::ParseXML()" << endl;
@@ -30,41 +34,34 @@ namespace LD {
 			cout << "Entering DBScan::Run()" << endl;
 
 		std::ifstream fin(m_dataFile.c_str());
-		std::ofstream fout(m_outputFile);
 		string imageName;
 		while(fin >> imageName) {
 			Eigen::ArrayXXf _data;
-			ReadEigenMatFromFile(fin, _data, m_shouldTranspose);
+			string inFile = m_dataRoot + "/" + m_inputFilePrefix + imageName.substr(0, imageName.size() - 3) + "txt";
+			ReadEigenMatFromFile(inFile, _data, m_shouldTranspose);
 			vector<int> labels;
 			Cluster(_data, labels);
-			fout << imageName << endl;
-			PrintOutputFile(fout, _data, labels);
+			PrintOutputFile(imageName, _data, labels);
 		}
 		
 		if(m_debug)
 			cout << "Exiting DBScan::Run()" << endl;
 	}
 
-	void DBScan::PrintOutputFile(std::ofstream& _fout, const Eigen::ArrayXXf& _data, const vector<int>& _labels) {
+	void DBScan::PrintOutputFile(const string& _imageName, const Eigen::ArrayXXf& _data, const vector<int>& _labels) {
 		if(m_debug)
 			cout << "Entering DBScan::PrintOutputFile()" << endl;
 
 		ulli inlierCount = 0;
+		std::ofstream fout(m_outputRoot + "/" + m_outputFilePrefix + _imageName.substr(0, _imageName.size() - 3) + "txt");
 		for(ulli c = 0; c < _data.cols(); c++)
 			if(_labels[c] != NOISE)
 				inlierCount++;
-			else if(_labels[c] == UNDEFINED)
-				throw runtime_error("undefined point");
-		
 
-		_fout << inlierCount << "\t" << _data.rows() << endl;
-		
 		for(ulli c = 0; c < _data.cols(); c++) {
-			if(_labels[c] == NOISE)
-				continue;
 			for(ulli r = 0; r < _data.rows(); r++)
-				_fout << _data(r, c) << "\t";
-			_fout << endl;
+				fout << _data(r, c) << "\t";
+			fout << ((_labels[c] == NOISE) ? 0 : _labels[c])  << endl;
 		}
 		
 		if(m_debug)
@@ -124,7 +121,7 @@ namespace LD {
 					neighborIndices.insert(neighborIndices.end(), newNeighborIndices.begin(), newNeighborIndices.end());
 					uniqueNeighbors.insert(newNeighborIndices.begin(), newNeighborIndices.end());
 				}
-			}		
+			}
 		}
 
 		if(m_debug)

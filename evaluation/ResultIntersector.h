@@ -11,6 +11,9 @@ namespace LD {
 		public:
 			ResultIntersector(string _xmlFile) : VeloProjector(_xmlFile) { ParseXML(); m_fout.open(m_outputRoot + "/" +m_outputFile); } 	
 
+			virtual void operator()(Mat& _veloPoints, const Mat& _segImg, const Mat& _refinedImg, Eigen::ArrayXXf& _intersectedPts);
+
+			bool isMode2D() { return m_printOnly2D; }
 		protected:
 
 			string m_segRoot;
@@ -26,11 +29,15 @@ namespace LD {
 			
 			virtual void ProcessProjectedLidarPts(const Eigen::MatrixXf& _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, Mat& _inputImg) override;
 			
-			void IntersectIn3D(const Eigen::MatrixXf _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, const Mat& _refinedImg, const double& _thresh, const Mat& _vizImg);
+			void IntersectIn3D(const Eigen::MatrixXf _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, const Mat& _refinedImg, const double& _thresh, Eigen::ArrayXXf& _intersectedImg, Mat& _vizImg);
+			void IntersectIn3D(const Eigen::MatrixXf _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, const Mat& _refinedImg, const double& _thresh, Eigen::ArrayXXf& _intersectedPts);
+	
+			void PrintToFile(Eigen::ArrayXXf& _intersectedPts);
 
 			double OtsuThresholdRoad(const Eigen::MatrixXf _veloImg, const Mat& _segImg, const Mat& _reflectivity);
 
 			virtual void ParseXML() override;
+
 	};
 }
 

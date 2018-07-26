@@ -9,18 +9,18 @@ namespace LD {
 		protected:
 			string m_segRoot;
 			string m_segImgPrefix;
-			string m_outputFile;
+			string m_outputFilePrefix;
 			string m_vizImgPrefix;
 			bool m_saveVizImg;
+			bool m_printProjectedPts;
 			int m_minPoints;
-			std::ofstream m_fout;
 
 			virtual void ParseXML() override;
 
 		public:
 			virtual void ProcessProjectedLidarPts(const Eigen::MatrixXf& _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, Mat& _inputImg) override;
 
-			SurfaceDataMaker(string _xmlFile) : VeloProjector(_xmlFile) { ParseXML(); m_fout.open(m_outputRoot + "/" + m_outputFile); }
+			SurfaceDataMaker(string _xmlFile) : VeloProjector(_xmlFile) { ParseXML(); }
 	};
 }
 

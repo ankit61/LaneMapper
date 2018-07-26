@@ -25,6 +25,8 @@ namespace LD {
 		m_net->Reshape();
 		
 		m_colormap = cv::imread("colormap.png", cv::IMREAD_GRAYSCALE);
+
+		WrapInputLayer();
 		
 		if(m_debug)
 			cout << "Exiting Segmenter::Segmenter()" << endl;
@@ -46,6 +48,18 @@ namespace LD {
 			throw runtime_error("One of the following attributes are missing in SolverInstance node of Segmenter: dataRoot, dataFile, segRoot, overlayedRoot, saveVizImg, vizImgPrefix, segImgPrefix");
 	}
 
+	void Segmenter::operator()(const cv::Mat& _inputImg, cv::Mat& _segImg) {
+		if(m_debug)
+			cout << "Entering Segmenter::()" << endl;
+		
+		m_originalW = _inputImg.cols, m_originalH = _inputImg.rows;
+		Preprocess(_inputImg);
+		Segment(_segImg);
+		
+		if(m_debug)
+			cout << "Exiting Segmenter::()" << endl;
+	}
+
 	void Segmenter::Run() {
 		//coordinates calls to other member functions and saves the final input
 		
@@ -54,8 +68,6 @@ namespace LD {
 		
 		std::ifstream fin(m_dataFile.c_str());
 		string line;
-		vector<cv::Mat> inputChannels;
-		WrapInputLayer(&inputChannels);
 		
 		while(std::getline(fin, line)) {
 			m_imgBaseName = basename(const_cast<char*>(line.c_str()));
@@ -64,10 +76,8 @@ namespace LD {
 			CHECK(!inputImg.empty()) << "could not open or find " << m_dataRoot + "/" + line;
 			if(m_debug)
 				cout << "Successfully opened " << line << endl;
-			m_originalW = inputImg.cols, m_originalH = inputImg.rows;
 		
-			Preprocess(inputImg, &inputChannels);
-			Segment(segImg);
+			this->operator()(inputImg, segImg);
 			Save(inputImg, segImg);
 		}
 		
@@ -76,13 +86,13 @@ namespace LD {
 
 	}
 
-	void Segmenter::WrapInputLayer(vector<cv::Mat>* _inputChannels) {
-		//makes elements of _inputChannels point to input layer of network 
+	void Segmenter::WrapInputLayer() {
+		//makes elements of m_inputChannels point to input layer of network 
 		
 		if(m_debug)
 			cout << "Entering Segmenter::WrapInputLayer()" << endl;
 		
-		*_inputChannels = vector<cv::Mat>(3, cv::Mat(cv::Size(m_cropSizeW, m_cropSizeH), CV_32FC3));
+		m_inputChannels = vector<cv::Mat>(3, cv::Mat(cv::Size(m_cropSizeW, m_cropSizeH), CV_32FC3));
 		Blob<float>* inputLayer = m_net->input_blobs()[0];
 		int width = inputLayer->width();
 		int height = inputLayer->height();
@@ -90,7 +100,7 @@ namespace LD {
 
 		for (int i = 0; i < inputLayer->channels(); ++i) {
 			cv::Mat channel(height, width, CV_32FC1, inputData);
-			_inputChannels->at(i) = channel;
+			m_inputChannels[i] = channel;
 			inputData += width * height;
 		}
 		
@@ -99,7 +109,7 @@ namespace LD {
 
 	}
 
-	void Segmenter::Preprocess(const cv::Mat& _inputImg, vector<cv::Mat>* _inputChannels) {
+	void Segmenter::Preprocess(const cv::Mat& _inputImg) {
 		//preprocesses the input image (resizing, zero centering) so it can be fed into the model
 		
 		if(m_debug)
@@ -118,7 +128,7 @@ namespace LD {
 		equalizedImg.convertTo(img, CV_32FC3);
 		cv::resize(img, img, cv::Size(m_cropSizeW, m_cropSizeH));
 		cv::subtract(img, cv::Scalar(m_meanB, m_meanG, m_meanR), img);
-		cv::split(img, *_inputChannels); //puting image in input layer
+		cv::split(img, m_inputChannels); //puting image in input layer
 		
 		if(m_debug) {
 			cout << "Image set to be input of network" << endl;

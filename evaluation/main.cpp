@@ -1,5 +1,7 @@
 #include "Solver.h"
 
+#include"LaneDetector.h"
+
 #include"Segmenter.h"
 
 #include"Refiner.h"
@@ -62,21 +64,10 @@ int main(int argc, char* argv[]) {
 		solverPtr = std::make_unique<Line3DTLinkage>(argv[1]);
 	else if(boost::iequals(solver, "DBScan"))
 		solverPtr = std::make_unique<DBScan>(argv[1]);
-	
-	if(solverPtr)
-		solverPtr->Run();
-	else if(boost::iequals(solver, "all")) {
-		solverPtr = std::make_unique<Segmenter>(argv[1]);
-		solverPtr->Run();
-		solverPtr = std::make_unique<KPercentExtractor>(argv[1]);
-		solverPtr->Run();
-		solverPtr = std::make_unique<ResultIntersector>(argv[1]);
-		solverPtr->Run();
-		solverPtr = std::make_unique<Line3DTLinkage>(argv[1]);
-		solverPtr->Run();
-	}
+	else if(boost::iequals(solver, "LaneDetector"))
+		solverPtr = std::make_unique<LaneDetector>(argv[1]);
 	else	
 		throw runtime_error("No such solver implemented: " + solver);
 
-
+	solverPtr->Run();
 }

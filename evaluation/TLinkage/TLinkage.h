@@ -56,6 +56,30 @@ namespace LD {
 			};
 
 			virtual void Run() override;
+			
+			virtual void operator()(const ArrayXXf& _data, ArrayXf& _clusters, vector<ArrayXf>& _models);
+
+			virtual void SetSampler(SamplingMethod _method);
+
+			void SetPreferenceFinder(VotingScheme _method);
+
+			virtual void SetOutlierRejector(OutlierRejectionMethod _method);
+
+			void CalculateTanimotoDist(const ArrayXXf& _preferences, ArrayXXf& _distances);
+
+			void PrintClustersToFile(const ArrayXf& _clusters, const string& _imgName);
+			
+			void PrintModelsToFile(vector<ArrayXf> _models, const string& _imgName);
+
+			TLinkage(int _minSamples, int _modelParams, string _xmlFile);
+
+		protected:
+
+			virtual double Distance(ArrayXf _dataPoint, ArrayXf _model) = 0;
+			
+			float Tanimoto(const ArrayXf& _a, const ArrayXf& _b);
+
+			virtual void ParseXML();
 
 			virtual void Sample(const ArrayXXf& _data, ArrayXXf& _sampleIndices, 
 					const ulli& _numSamples);
@@ -77,24 +101,6 @@ namespace LD {
 			virtual void Cluster(ArrayXXf& _preferences, ArrayXf& _clusters);
 
 			virtual void RejectOutliers(const ArrayXf& _clusters, ArrayXf& _out);
-
-			virtual void SetSampler(SamplingMethod _method);
-
-			void SetPreferenceFinder(VotingScheme _method);
-
-			virtual void SetOutlierRejector(OutlierRejectionMethod _method);
-
-			void CalculateTanimotoDist(const ArrayXXf& _preferences, ArrayXXf& _distances);
-
-			TLinkage(int _minSamples, int _modelParams, string _xmlFile);
-
-		protected:
-
-			virtual double Distance(ArrayXf _dataPoint, ArrayXf _model) = 0;
-			
-			float Tanimoto(const ArrayXf& _a, const ArrayXf& _b);
-
-			virtual void ParseXML();
 
 			std::unique_ptr<Sampler> m_sampler;
 			std::unique_ptr<OutlierRejector> m_outlierRejector;
