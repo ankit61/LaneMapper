@@ -6,6 +6,20 @@
 #include <boost/algorithm/string/predicate.hpp>
 #include"../Utilities.h"
 
+//Samplers
+#include"UniformSampler.h"
+#include"DistBasedSampler.h"
+
+//Outlier Rejectors
+#include"MaxDiffOR.h"
+#include"KLargestOR.h"
+
+//Preference finders
+#include"ExpPreferenceFinder.h"
+#include"HardPreferenceFinder.h"
+#include"GaussPreferenceFinder.h"
+#include"TukeyPreferenceFinder.h"
+
 namespace LD {
 
 	
@@ -37,29 +51,31 @@ namespace LD {
 			
 		//Set Sampler
 		if(boost::iequals(sampler, "Uniform"))
-			SetSampler(UNIFORM);
+			SetSampler(SamplingMethod::UNIFORM);
 		else if(boost::iequals(sampler, "PreferNear"))
-			SetSampler(PREFER_NEAR);
+			SetSampler(SamplingMethod::PREFER_NEAR);
 		else
 			throw runtime_error("No such sampler found: " + sampler);
 
 		//Set Outlier Rejector
 		if(boost::iequals(outlierRejector, "MaxSizeChange"))
-			SetOutlierRejector(MAX_SIZE_CHANGE);
+			SetOutlierRejector(OutlierRejectionMethod::MAX_SIZE_CHANGE);
 		else if(boost::iequals(outlierRejector, "KLargest"))
-			SetOutlierRejector(K_LARGEST);
+			SetOutlierRejector(OutlierRejectionMethod::K_LARGEST);
+		else if(boost::iequals(outlierRejector, "none"))
+			SetOutlierRejector(OutlierRejectionMethod::NONE);
 		else
 			throw runtime_error("No such outlier rejector found: " + outlierRejector);
 
 		//Set Preference Finder
 		if(boost::iequals(preferenceFinder, "Exp"))
-			SetPreferenceFinder(EXP);
+			SetPreferenceFinder(PreferenceMethod::EXP);
 		else if(boost::iequals(preferenceFinder, "Gauss"))
-			SetPreferenceFinder(EXP);
+			SetPreferenceFinder(PreferenceMethod::GAUSS);
 		else if(boost::iequals(preferenceFinder, "Tukey"))
-			SetPreferenceFinder(EXP);
+			SetPreferenceFinder(PreferenceMethod::TUKEY);
 		else if(boost::iequals(preferenceFinder, "Hard"))
-			SetPreferenceFinder(EXP);
+			SetPreferenceFinder(PreferenceMethod::HARD);
 		else
 			throw runtime_error("No such preference finder found: " + preferenceFinder);
 
@@ -70,13 +86,16 @@ namespace LD {
 			cout << "Entering TLinkage::()" << endl;
 		
 		ArrayXXf sampleIndices, hypotheses, residuals, pref;
+		std::unordered_map<int, ulli> clusterID2Index;
+		std::unordered_map<int, vector<ulli> > clusterID2PtIndices;
 		Sample(_data, sampleIndices, m_samplesPerDataPt * _data.cols());
 		GenerateHypotheses(_data, sampleIndices, hypotheses);
 		FindResiduals(_data, hypotheses, residuals);
 		FindPreferences(residuals, pref);
-		Cluster(pref, _clusters);
-		RejectOutliers(_clusters, _clusters);
-		FitModels(_data, _clusters, _models);
+		Cluster(pref, _clusters, clusterID2PtIndices);
+		RejectOutliers(_clusters, clusterID2PtIndices, _clusters);
+		FitModels(_data, _clusters, _models, clusterID2Index);
+		RefineModels(_models, _data, _clusters, clusterID2Index, clusterID2PtIndices, _models);
 
 		if(m_debug)
 			cout << "Exiting TLinkage::()" << endl;
@@ -90,7 +109,7 @@ namespace LD {
 		if(!fin)
 			throw runtime_error("couldn't open " + m_dataFile);
 		while(fin >> m_imgName) {
-			ArrayXXf data, sampleIndices, hypotheses, residuals, pref;
+			ArrayXXf data;
 			ArrayXf clusters;
 			vector<ArrayXf> models;
 			ReadEigenMatFromFile(fin, data, m_shouldTranspose);
@@ -133,10 +152,10 @@ namespace LD {
 
 	void TLinkage::SetSampler(SamplingMethod _method) {
 		switch(_method) {
-			case PREFER_NEAR:
+			case SamplingMethod::PREFER_NEAR:
 				m_sampler = std::make_unique<DistBasedSampler>(m_xmlFileName);
 				break;
-			case UNIFORM:
+			case SamplingMethod::UNIFORM:
 				m_sampler = std::make_unique<UniformSampler>(m_xmlFileName);
 				break;
 			default:
@@ -147,30 +166,33 @@ namespace LD {
 
 	void TLinkage::SetOutlierRejector(OutlierRejectionMethod _method) {
 		switch(_method) {
-			case MAX_SIZE_CHANGE:
+			case OutlierRejectionMethod::MAX_SIZE_CHANGE:
 				m_outlierRejector = std::make_unique<MaxDiffOR>(m_minSamples, m_xmlFileName);
 				break;
-			case K_LARGEST:
+			case OutlierRejectionMethod::K_LARGEST:
 				m_outlierRejector = std::make_unique<KLargestOR>(m_xmlFileName);
+				break;
+			case OutlierRejectionMethod::NONE:
+				m_outlierRejector = nullptr;
 				break;
 			default:
 				throw runtime_error("Attempt to set unknown outlier rejector");
 		}
 	}
 
-	void TLinkage::SetPreferenceFinder(VotingScheme _method) {
+	void TLinkage::SetPreferenceFinder(PreferenceMethod _method) {
 
 		switch(_method) {
-			case EXP: 
+			case PreferenceMethod::EXP: 
 				m_preferenceFinder = std::make_unique<ExpPreferenceFinder>(m_xmlFileName);
 				break;
-			case GAUSS:
+			case PreferenceMethod::GAUSS:
 				m_preferenceFinder = std::make_unique<GaussPreferenceFinder>(m_xmlFileName);
 				break;
-			case HARD:
+			case PreferenceMethod::HARD:
 				m_preferenceFinder = std::make_unique<HardPreferenceFinder>(m_xmlFileName);
 				break;
-			case TUKEY:
+			case PreferenceMethod::TUKEY:
 				m_preferenceFinder = std::make_unique<TukeyPreferenceFinder>(m_xmlFileName);
 				break;
 			default:
@@ -242,7 +264,7 @@ namespace LD {
 
 	}
 
-	void TLinkage::Cluster(ArrayXXf& _preferences, ArrayXf& _clusters) {
+	void TLinkage::Cluster(ArrayXXf& _preferences, ArrayXf& _clusters, std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices) {
 		if(m_debug)
 			cout << "Entering TLinkage::Cluster()" << endl;
 
@@ -256,7 +278,7 @@ namespace LD {
 		//find min dist
 		ulli pt1, pt2;
 		double minDist = distances.minCoeff(&pt1, &pt2);
-		while(minDist < 1) {
+		while(minDist < 1) {  //FIXME: is it correct to stop the first time you see 1?
 
 			//remove other point
 			if(pt2 > 0)
@@ -278,8 +300,10 @@ namespace LD {
 			minDist = distances.minCoeff(&pt1, &pt2);
 		}
 
-		for(ulli i = 0; i < _clusters.size(); i++)  //copy union find vector to Eigen::Array
+		for(ulli i = 0; i < _clusters.size(); i++) { //copy union find vector to Eigen::Array
 			_clusters(i) = uf.findSet(i);
+			_clusterID2PtIndices[_clusters(i)].push_back(i);
+		}
 
 		if(m_debug)
 			cout << "Exiting TLinkage::Cluster()" << endl;
@@ -308,35 +332,34 @@ namespace LD {
 		return 1 - dotProd / (_a.matrix().squaredNorm() + _b.matrix().squaredNorm() - dotProd);
 	}
 
-	void TLinkage::RejectOutliers(const ArrayXf& _clusters, ArrayXf& _out) {
+	void TLinkage::RejectOutliers(const ArrayXf& _clusters, const std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices, ArrayXf& _out, const int& _noiseIndex) {
 
 		if(m_debug)
 			cout << "Entering TLinkage::RejectOutliers()" << endl;
 
 		if(!m_outlierRejector)
-			throw runtime_error("OutlierRejector not set");
+			return;
 
-		(*m_outlierRejector)(_clusters, _out);
+		(*m_outlierRejector)(_clusters, _clusterID2PtIndices, _out, _noiseIndex);
 
 		if(m_debug)
 			cout << "Exiting TLinkage::RejectOutliers()" << endl;
 	}
 
-	void TLinkage::FitModels(const ArrayXXf& _data, const ArrayXf& _clusters, vector<ArrayXf>& _models, const int& _noiseIndex) {
+	void TLinkage::FitModels(const ArrayXXf& _data, const ArrayXf& _clusters, vector<ArrayXf>& _models, std::unordered_map<int, ulli>& _clusterID2Index, const int& _noiseIndex) {
 		if(m_debug)
 			cout << "Entering TLinkage::FitModels()" << endl;
 
 		vector<vector<float> > clusteredPoints;
-		std::unordered_map<long long int, ulli> clusterID2Index;
 
 		for(ulli i = 0; i < _clusters.size(); i++) {
 			if(_clusters(i) != _noiseIndex) {
-				if(clusterID2Index.find(_clusters(i)) == clusterID2Index.end()) {
-					clusterID2Index[_clusters(i)] = clusteredPoints.size();
+				if(_clusterID2Index.find(_clusters(i)) == _clusterID2Index.end()) {
+					_clusterID2Index[_clusters(i)] = clusteredPoints.size();
 					clusteredPoints.push_back(vector<float>());
 				}
 				for(ulli j = 0; j < _data.rows(); j++)
-					clusteredPoints[clusterID2Index[_clusters(i)]].push_back(_data(j, i));
+					clusteredPoints[_clusterID2Index[_clusters(i)]].push_back(_data(j, i));
 			}
 		}
 
@@ -347,15 +370,11 @@ namespace LD {
 		_models.resize(clusteredPoints.size());
 
 		for(ulli i = 0; i < clusters.size(); i++) {
-
-			clusters[i] = Map<Matrix<float, Dynamic, Dynamic, RowMajor>, Unaligned, OuterStride<> >(clusteredPoints[i].data(),
-					clusteredPoints[i].size() / _data.rows(), _data.rows(), 
-					OuterStride<>(_data.rows())).array(); //this is a deep copy
+			clusters[i] = Map<Matrix<float, Dynamic, Dynamic, RowMajor>, Unaligned, OuterStride<> >(clusteredPoints[i].data(), clusteredPoints[i].size() / _data.rows(), _data.rows(), OuterStride<>(_data.rows())).array(); //this is a deep copy
 			FitModel(clusters[i], _models[i]);
 		}
 
 		if(m_debug)
 			cout << "Exiting TLinkage::FitModels()" << endl;
 	}
-
 }

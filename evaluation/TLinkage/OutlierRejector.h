@@ -3,13 +3,14 @@
 
 #include<Eigen/Dense>
 #include "../BaseLD.h"
+#include<unordered_map>
 
 namespace LD {
 	using namespace Eigen;
 
 	class OutlierRejector : public BaseLD {
 		public:
-			virtual void operator()(const ArrayXf& _clusters, ArrayXf& _out) = 0;
+			virtual void operator()(const ArrayXf& _clusters, const std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices, ArrayXf& _out, const int& _noiseIndex = -1) = 0;
 
 			virtual void ParseXML() override { 
 				m_xml = m_xml.child("Solvers").child("TLinkage").child("OutlierRejectors");  

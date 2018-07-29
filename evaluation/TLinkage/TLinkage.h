@@ -5,27 +5,11 @@
 #include<Eigen/Dense>
 #include<memory>
 #include<fstream>
-
-//Samplers
+#include<unordered_map>
 
 #include"Sampler.h"
-#include"UniformSampler.h"
-#include"DistBasedSampler.h"
-
-//Outlier Rejectors
-
 #include"OutlierRejector.h"
-#include"MaxDiffOR.h"
-#include"KLargestOR.h"
-
-//Preference Finders
-
 #include"PreferenceFinder.h"
-#include"ExpPreferenceFinder.h"
-#include"HardPreferenceFinder.h"
-#include"GaussPreferenceFinder.h"
-#include"TukeyPreferenceFinder.h"
-
 
 //TODO: Use more compile time processing
 
@@ -33,26 +17,25 @@ namespace LD {
 
 	using namespace Eigen;
 
-	//TODO: Define ParseXML.
-
 	class TLinkage : public Solver {
 		public:
 
-			enum SamplingMethod {
+			enum class SamplingMethod {
 				UNIFORM,
 				PREFER_NEAR,
 			};
 			
-			enum VotingScheme {
+			enum class PreferenceMethod {
 				EXP,
 				GAUSS,
 				HARD,
 				TUKEY
 			};
 
-			enum OutlierRejectionMethod {
+			enum class OutlierRejectionMethod {
 				MAX_SIZE_CHANGE,
-				K_LARGEST
+				K_LARGEST,
+				NONE
 			};
 
 			virtual void Run() override;
@@ -61,12 +44,10 @@ namespace LD {
 
 			virtual void SetSampler(SamplingMethod _method);
 
-			void SetPreferenceFinder(VotingScheme _method);
+			void SetPreferenceFinder(PreferenceMethod _method);
 
 			virtual void SetOutlierRejector(OutlierRejectionMethod _method);
-
-			void CalculateTanimotoDist(const ArrayXXf& _preferences, ArrayXXf& _distances);
-
+			
 			void PrintClustersToFile(const ArrayXf& _clusters, const string& _imgName);
 			
 			void PrintModelsToFile(vector<ArrayXf> _models, const string& _imgName);
@@ -76,6 +57,8 @@ namespace LD {
 		protected:
 
 			virtual double Distance(ArrayXf _dataPoint, ArrayXf _model) = 0;
+			
+			void CalculateTanimotoDist(const ArrayXXf& _preferences, ArrayXXf& _distances);
 			
 			float Tanimoto(const ArrayXf& _a, const ArrayXf& _b);
 
@@ -89,7 +72,7 @@ namespace LD {
 			virtual void GenerateHypotheses(const ArrayXXf& _data, 
 				const ArrayXXf& _sampleIndices, ArrayXXf& _hypotheses);
 
-			virtual void FitModels(const ArrayXXf& _data, const ArrayXf& _clusters, vector<ArrayXf>& _models, const int& _noiseIndex = -1);
+			void FitModels(const ArrayXXf& _data, const ArrayXf& _clusters, vector<ArrayXf>& _models, std::unordered_map<int, ulli>& _clusterID2Index, const int& _noiseIndex = -1);
 
 			virtual void FitModel(const ArrayXXf& _clusteredPoints, ArrayXf& _model) = 0;
 
@@ -98,9 +81,11 @@ namespace LD {
 
 			virtual void FindPreferences(const ArrayXXf& _residuals, ArrayXXf& _preferences);
 
-			virtual void Cluster(ArrayXXf& _preferences, ArrayXf& _clusters);
+			virtual void Cluster(ArrayXXf& _preferences, ArrayXf& _clusters, std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices);
 
-			virtual void RejectOutliers(const ArrayXf& _clusters, ArrayXf& _out);
+			virtual void RejectOutliers(const ArrayXf& _clusters, const std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices, ArrayXf& _out, const int& _noiseIndex = -1);
+			
+			virtual void RefineModels(const vector<ArrayXf>& _models, const ArrayXXf& _data, const ArrayXf& _clusters, const std::unordered_map<int, ulli>& _clusterID2Index, const std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices, vector<ArrayXf>& _refinedModels, const int& _noiseIndex = -1) {}
 
 			std::unique_ptr<Sampler> m_sampler;
 			std::unique_ptr<OutlierRejector> m_outlierRejector;
