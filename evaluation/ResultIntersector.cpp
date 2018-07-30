@@ -85,7 +85,8 @@ namespace LD {
 			int xImg = _veloImg(i, 0), yImg = _veloImg(i, 1);
 			float xLidar = _veloPoints.at<float>(i, 0), yLidar = _veloPoints.at<float>(i, 1);
 			float reflect = _reflectivity.at<float>(i, 0);
-			if(isValid(yImg, xImg, _refinedImg.rows, _refinedImg.cols) && std::abs(yLidar) <= m_maxWidth && std::abs(xLidar) <= m_maxLength && _refinedImg.at<unsigned char>(yImg, xImg) && reflect > _thresh) { 
+			if(isValid(yImg, xImg, _refinedImg.rows, _refinedImg.cols) && std::abs(yLidar) <= m_maxWidth && std::abs(xLidar) <= m_maxLength && 
+			   _refinedImg.at<unsigned char>(yImg, xImg)  && reflect > _thresh) { 
 				if(m_printOnly2D)
 					intersectedPtsVec.push_back({xLidar, yLidar});
 				else
@@ -111,7 +112,7 @@ namespace LD {
 			cout << "Entering ResultIntersector::PrintToFile()" << endl;
 		
 		m_fout << m_imgBaseName << endl;
-		m_fout << _intersectedPts.cols() << _intersectedPts.rows() << endl;
+		m_fout << _intersectedPts.cols() << "\t" <<  _intersectedPts.rows() << endl;
 
 		for(ulli c = 0; c < _intersectedPts.cols(); c++) {
 			for(ulli r = 0; r < _intersectedPts.rows(); r++)

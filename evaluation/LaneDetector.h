@@ -1,3 +1,6 @@
+#ifndef LANE_DETECTOR_H_
+#define LANE_DETECTOR_H_
+
 #include"Solver.h"
 #include<opencv2/core/core.hpp>
 #include<opencv2/highgui/highgui.hpp>
@@ -31,3 +34,5 @@ namespace LD {
 			virtual void ParseXML() override;
 	};
 }
+
+#endif
