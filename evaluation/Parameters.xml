@@ -4,29 +4,95 @@
 	<Solvers>
 		
 		<Segmenter>
+
+		<!-- dataRoot 	   = directory from which relative paths to images are given in dataFile 
+			 dataFile 	   = file listing relative paths of images to test
+			 segRoot 	   = directory where binary segmented images would be stored
+			 saveVizImg	   = true if overlaid images are desired
+			 vizImgPrefix  = prefix put before the name of overlaid image
+			 segImgPrefix  = prefix put before the name of segmented image
+			 overlayedRoot = directory where overlaid images would be stored -->
+
 			<SolverInstance dataRoot = "/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data/" dataFile="images.txt" segRoot="/media/sf_Autonomous_Driving/HistEqualized/Segmented/" saveVizImg="true" vizImgPrefix="overlayed_" segImgPrefix="segmented_" overlayedRoot="/media/sf_Autonomous_Driving/HistEqualized/Overlayed/"/>
 		</Segmenter>
 
 		<Refiner>
-
+			
+			<!-- k = percent of pixels to label as lanes -->
 			<KPercentExtractor k="10"/>
 
+			<!-- minDiff 			= threshold applied after [-1 1 0] filter is applied to the image 
+				 peakNeighbors 		= only elements that are highest in their neighboring peakNeighbors pixels are kept after applying [-1 1 0] filter
+				 minArea 			= minimum area of countours to qualify as potential lanes (measured in pixels)
+				 maxArea 			= maximum area of contours to qualify as potential lanes (measured in pixels)
+				 minWidth 			= minimum horizontal width of contours to qualify as potential lanes (measured in pixels)
+				 maxWidth 			= maximum horizontal width of contours to qualify as potential lanes (measured in pixels)
+				 minLength 			= minimum vertical length of contours to qualify as potential lanes (measured in pixels)
+				 stretchingFagments = unused
+				 numHorizontalLines = number of horizontal lines to draw on image to ensure contours are complete
+				 showStepByStep 	= whether to show each step of algoritm; best for vizualizing/debugging -->
+			
 			<LaneExtractor minDiff="10" peakNeighbors="5" minArea="10" maxArea="10000" minWidth="5" maxWidth="250" minLength="10" stretchingFragments="2" numHorizontalLines="2" showStepByStep="true"/>
+
+			<!-- dataRoot 	   = directory from which relative paths to images are given in dataFile 
+			 dataFile 	       = file listing relative paths of images to test
+			 segRoot 	       = directory where binary segmented images are stored
+			 refinedRoot       = directory where refined and overlaid images should be stored
+			 saveVizImg	  	   = true if overlaid images are desired
+			 vizImgPrefix	   = prefix put before the name of overlaid image
+			 refinedImgPrefix  = prefix put before the name of refined image -->
 
 			<SolverInstance dataRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data/" dataFile="images.txt" segRoot="/media/sf_Autonomous_Driving/HistEqualized/Segmented/" refinedRoot="/media/sf_Autonomous_Driving/ExtractedLanes/" saveVizImg="true" vizImgPrefix="newOverlayed_" refinedImgPrefix="lidar_"/>
 		</Refiner>
 		
 		<VeloProjector>
+			
+			<!-- segRoot 	   = directory where segmented images are stored
+			 maxWidth 	       = points with |y| <= |maxWidth| would only be considered (y is defined with respect to the lidar frame of reference)
+			 maxWidth 	       = points with |x| <= |maxLength| would only be considered (x is defined with respect to the lidar frame of reference)
+			 refinedRoot	   = directory where refined images are stored
+			 refImgPrefix	   = prefix before all refined images
+			 segImgPrefix	   = prefix before all segmented images
+			 outputFile		   = file where all points that lie in the intersection would be stored
+			 saveVizImg 	   = true if image which has circles at all intersected points is needed
+			 vizImgPrefix      = prefix before the visualization image (one with circles)
+			 printOnly2D	   = true if only x and y coordinates (lidar space) must be printed in file
+			 -->
+
 			<ResultIntersector segRoot="/media/sf_Autonomous_Driving/HistEqualized/Segmented/" maxWidth="3" maxLength="20" refinedRoot ="/media/sf_Autonomous_Driving/ExtractedLanes" refImgPrefix="refined_" segImgPrefix="segmented_" outputFile="lidarRoadThresholded.txt" saveVizImg="true" vizImgPrefix="lidar_" printOnly2D="false"/>
+
+			<!-- segRoot 	   = directory where segmented images are stored
+			 segImgPrefix	   = prefix before all segmented images
+			 outputFilePrefix  = prefix before all output files 
+			 saveVizImg 	   = true if image which has circles at all intersected points is needed
+			 vizImgPrefix      = prefix before the visualization image (one with circles)
+			 printProjectedPts = true if points are to be printed after projecting to image space
+			 minPoints		   = minimum number of points to be there for an entry to go in file
+			 -->
 
 			<SurfaceDataMaker segRoot="/media/sf_Autonomous_Driving/HistEqualized/Segmented/" segImgPrefix="segmented_" outputFilePrefix="lidarRoad2DPts_" saveVizImg="false" vizImgPrefix="lidarRoad_" minPoints="15" printProjectedPts="true"/>
 
+			<!-- dataRoot 	   = directory from which relative paths to images are given in dataFile 
+			 dataFile 	       = file listing relative paths of images to test
+			 veloRoot 	       = directory where .bin files are stored containing Lidar points
+			 calibRoot         = directory where calibration files are stored
+			 outputRoot	  	   = directory where any output should be stored
+			 retentionFrequency= only 1 of every retentionFrequency number of lidar points would be considered 
+			 camNum 	       = the camera number used (0,1,2,3)
+			 minX			   = the minimum x coordinate a Lidar point must have to be considered to lie on the image -->
+			
 			<SolverInstance dataRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data/" dataFile="images.txt"  veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" calibRoot="/media/sf_Autonomous_Driving/calib" outputRoot="/media/sf_Autonomous_Driving/Lidar/" retentionFrequency="5" camNum="2" minX="5"/>
 		</VeloProjector>
 		
 		<TLinkage>
 			<Samplers>
 				<Uniform/>
+				<!-- sigma 	   	   = an implementation detail (should be good at 5) 
+				 maxDiff 	       = maximum difference to tolerate while sampling (in m or degrees)
+				 measurementWay    = way to measure "distance" 
+				 					AbsVerticalDegree if the angle with respect to y axis is measured between points
+									Euclidean if simple geometric distance is supposed to be measured-->
+
 				<DistBased sigma="5" maxDiff="20" measurementWay="AbsVerticalDegree"/>
 			</Samplers>
 
@@ -36,10 +102,16 @@
 				<Circle2D/>
 				<Surface/>
 				<Road/>
+			<!-- minShift = minimum distance to push a line by when finding parallel line on other side
+			  	 maxShift = maximum distance to push a line by when finding parallel line on other side
+				 resolution = distance by which each increment happens
+				 errorThreshold = the maximum average least square distance from all points in a cluster to the parallel line constructed
+			-->
 				<Line3D minShift="2.7" maxShift="6" resolution="0.025" errorThreshold="1"/>
 				<BSpline/>
 			</Models>
 
+			<!-- inlierThreshold = maximum distance between a model and a sample that fits the model-->
 			<PreferenceFinders inlierThreshold="1">
 				<Exp divFactor="5"/>
 				<Hard/>
@@ -52,12 +124,39 @@
 				<KLargest k="2"/>
 			</OutlierRejectors>
 
+			<!-- dataFile = file that lists all points
+				 shouldTranspose = true if colums in dataFile = number of dimensions of points
+				 modelFile = file which would store all model parameters
+				 saveClusters = true if clusters should be saved
+				 clusterFile  = file which would store all clusters 
+				 preferenceFinder = name of preference finder (any child of PreferenceFinders node) 
+				 sampler = name of sampler to use (any child of Samplers node (for DistBased, use PreferNear as its name)
+				 outlierRejector = name of outlier rejector (None or any child of OutlierRejectors node)
+				 samplesPerDataPt = total samples generated would samplesPerDataPt * data points
+				 -->
+
 			<SolverInstance dataFile="/media/sf_Autonomous_Driving/Lidar/intersected3DPts.txt" shouldTranspose="true"  modelFile="/media/sf_Autonomous_Driving/Line3DModels.txt" saveClusters="true" clusterFile="/media/sf_Autonomous_Driving/Line3DClusters.txt" preferenceFinder="Exp" sampler="PreferNear" outlierRejector="None" samplesPerDataPt="5"/>
 
 		</TLinkage>
 
+		<!-- eps, maxMinPts = usual parameters of DBScan
+			  minMinPts = minimum number of minPts if minPts decline with distance
+			  declineSlope = slope by which minPts reduces as distance increases (should be +ve)
+			  dataRoot = directory where all files generated by SurfaceDataMaker are stored
+			  dataFile = file which lists image names of images to test
+			  inputFilePrefix = prefix with which files are saved by SurfaceDataMaker (should equal outputFilePrefix attribute of surface data maker)
+			  outputFilePrefix = prefix of all output files
+			  shouldTranspose = true if number of columns in input file equal dimensions of points
+			  outputRoot = directory where all output should be stored
+			  -->
+
 		<DBScan eps="30" maxMinPts="30" minMinPts="5" minX="6" declineSlope="0" dataRoot="/media/sf_Autonomous_Driving/Lidar" dataFile="images.txt" inputFilePrefix="lidarRoad2DPts_" outputRoot="/media/sf_Autonomous_Driving/DBScan/" outputFilePrefix="dbs_" shouldTranspose="true"/>
 
+		<!-- imgRoot = directory from which relative paths are listed in imgFile
+			 imgFile = file that stores all relative paths to images
+			 veloRoot = directory which stores all bin files containing Lidar points
+			 -->
+		
 		<LaneDetector imgRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data/" imgFile="images.txt" veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data"/>
 
 	</Solvers>
