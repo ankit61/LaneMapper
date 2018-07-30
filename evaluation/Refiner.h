@@ -53,14 +53,12 @@ namespace LD {
 			bool m_saveVizImg;
 			string m_refinedImgPrefix;
 
-			virtual void Preprocess(const Mat& _original, const Mat& _segImg, Mat& _preprocessed) = 0;
-			
 			/**
 			 * \brief extracts lanes from segmented image
 			 * \param _extractedImg image which is black except where there is road
 			 * \param _refinedImg stores output 
 			 */
-			virtual void Refine(const Mat& _extractedImg, Mat& _refinedImg) = 0;
+			virtual void Refine(const Mat& _original, const Mat& _segImg, Mat& _refinedImg) = 0;
 
 			virtual void ParseXML() override;
 			
