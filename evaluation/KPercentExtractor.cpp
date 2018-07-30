@@ -21,13 +21,15 @@ namespace LD {
 			cout << "Exiting KPercentExtractor::Preprocess()" << endl;
 	}
 	
-	void KPercentExtractor::Refine(const Mat& _extractedImg, Mat& _refinedImg) {
+	void KPercentExtractor::Refine(const Mat& _original, const Mat& _segImg, Mat& _refinedImg) {
 		
 		if(m_debug)	
 			cout << "Entering KPercentExtractor::Refine()" << endl;
 		
+		Mat extractedImg;
+		Preprocess(_original, _segImg, extractedImg);
 		//get top k% pixels
-		Mat flattened = _extractedImg.reshape(1, 1).clone();
+		Mat flattened = extractedImg.reshape(1, 1).clone();
 		if(flattened.isContinuous()) {
 			std::sort(flattened.data, flattened.data + flattened.total());
 			int numZeros = std::distance(flattened.datastart, std::upper_bound(flattened.datastart, flattened.dataend, 0));
@@ -37,7 +39,7 @@ namespace LD {
 			if(m_debug)
 				cout << "Threshold set to " << thresh << endl;
 
-			threshold(_extractedImg, _refinedImg, thresh, 255, THRESH_BINARY);
+			threshold(extractedImg, _refinedImg, thresh, 255, THRESH_BINARY);
 		}
 		else {
 			//ideally it should always be continuous

@@ -13,9 +13,9 @@ namespace LD {
 			virtual void ParseXML() override;
 
 		public:
-			virtual void Preprocess(const Mat& _original, const Mat& _segImg, Mat& _preprocessed) override;
+			virtual void Preprocess(const Mat& _original, const Mat& _segImg, Mat& _preprocessed);
 
-			virtual void Refine(const Mat& _extractedImg, Mat& _refinedImg) override;
+			virtual void Refine(const Mat& _original, const Mat& _segImg, Mat& _refinedImg) override;
 
 			KPercentExtractor(string _xmlFile) : Refiner(_xmlFile) { ParseXML(); }
 	};

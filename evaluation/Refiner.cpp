@@ -44,8 +44,7 @@ namespace LD {
 			cout << "Entering Refiner::()" << endl;
 		
 		Mat preprocessed;
-		Preprocess(_original, _segImg, preprocessed);
-		Refine(preprocessed, _refinedImg);
+		Refine(_original, _segImg, _refinedImg);
 
 		if(m_debug)
 			cout << "Exiting Refiner::()" << endl;

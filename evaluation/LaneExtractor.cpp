@@ -8,68 +8,129 @@ namespace LD {
 		
 		m_xml = m_xml.child("LaneExtractor");
 
-		m_minDiff 		= m_xml.attribute("minDiff").as_int();
-		m_peakNeighbors = m_xml.attribute("peakNeighbors").as_int();
-		m_minArea		= m_xml.attribute("minArea").as_int(-1); 
-		m_maxArea		= m_xml.attribute("maxArea").as_int();
-		m_minLength		= m_xml.attribute("minLength").as_int(-1);
-		m_minWidth		= m_xml.attribute("minWidth").as_int(-1);
-		m_maxWidth		= m_xml.attribute("maxWidth").as_int();
+		m_minDiff 				= m_xml.attribute("minDiff").as_int();
+		m_peakNeighbors 		= m_xml.attribute("peakNeighbors").as_int();
+		m_minArea				= m_xml.attribute("minArea").as_int(-1); 
+		m_maxArea				= m_xml.attribute("maxArea").as_int();
+		m_minLength				= m_xml.attribute("minLength").as_int(-1);
+		m_minWidth				= m_xml.attribute("minWidth").as_int(-1);
+		m_maxWidth				= m_xml.attribute("maxWidth").as_int();
+		m_stretchingFragments	= m_xml.attribute("stretchingFragments").as_int();
+		m_numHorizontalLines	= m_xml.attribute("numHorizontalLines").as_int();
+		m_showStepByStep		= m_xml.attribute("showStepByStep").as_bool();
 
-		if(!m_minDiff || !m_peakNeighbors || (m_minWidth == -1) || !m_maxWidth || (m_minLength == -1) || (m_minArea == -1) || !m_maxArea)
-			throw runtime_error("at least one of the following parameters missing in xml: minDiff, peakNeighbors, minArea, maxArea, minWidth, maxWidth, minLength");
+		if((m_minDiff <= 0) || (m_peakNeighbors <= 0) || (m_minWidth < 0) || (m_maxWidth <= 0) || (m_minLength < 0) || (m_minArea < 0) || (m_maxArea <= 0) || (m_stretchingFragments <= 0) || (m_numHorizontalLines < 0))
+			throw runtime_error("at least one of the following parameters missing/invalid in xml: minDiff, peakNeighbors, minArea, maxArea, minWidth, maxWidth, minLength, stretchingFragments, numHorizontalLines");
 
 		if(m_debug)
 			cout << "Exiting LaneExtractor::ParseXML()" << endl;
 	
 	}
-	
-	void LaneExtractor::Preprocess(const Mat& _original, const Mat& _segImg, Mat& _preprocessed) {
+
+	void LaneExtractor::FindSubtractedImg(const Mat& _original, Mat& _subtracted) {
 		if(m_debug)
-			cout << "Entering LaneExtractor::Preprocess()" << endl;
-
-		//fill small holes in segmented image
-		Mat filledSeg = _segImg.clone(); //FIXME: deep copy
-		m_filler(filledSeg, 0, 500);
-
-		cvtColor(_original, _preprocessed, COLOR_RGB2GRAY);
-		bitwise_and(_preprocessed, filledSeg, _preprocessed);
+			cout << "Entering LaneExtractor::FindSubtractedImg()" << endl;
 		
+		Mat kernel = getStructuringElement(MORPH_RECT, Size(4, 4));
+		Mat dilated;
+		morphologyEx(_original, dilated, MORPH_DILATE, kernel);
+		subtract(dilated, _original, _subtracted);
+		threshold(_subtracted, _subtracted, 20, 255, THRESH_TOZERO);  //FIXME: Better way of thresholding
+
 		if(m_debug)
-			cout << "Exiting LaneExtractor::Preprocess()" << endl;
+			cout << "Entering LaneExtractor::FindSubtractedImg()" << endl;
+	}
+
+	void LaneExtractor::StretchHistogramHorizontally(Mat& _img) {
+		if(m_debug)
+			cout << "Entering LaneExtractor::StretchingFragments()" << endl;
+	
+		int incrementBy = _img.cols / m_stretchingFragments;
+		for(int r = 0; r < _img.rows; r++) {
+			double minVal, maxVal;
+			for(int c = 0; c < _img.cols; c += incrementBy) {
+				minMaxLoc(_img.row(r).colRange(c, std::min(_img.cols, c + incrementBy)), &minVal, &maxVal);
+				_img.row(r).colRange(c, std::min(_img.cols, c + incrementBy)) = (_img.row(r).colRange(c, std::min(_img.cols, c + incrementBy)) - minVal) * (255 / (maxVal - minVal));
+			}
+		}
+
+		if(m_debug)
+			cout << "Exiting LaneExtractor::StretchingFragments()" << endl;
 	}
 	
-	void LaneExtractor::Refine(const Mat& _extractedImg, Mat& _refinedImg) {
+	void LaneExtractor::Refine(const Mat& _original, const Mat& _segImg, Mat& _refinedImg) {
 		if(m_debug)
 			cout << "Entering LaneExtractor::Refine()" << endl;
 
-		Mat kernel = getStructuringElement(MORPH_RECT, Size(4, 4));
-		Mat dilated, subtracted;
-		morphologyEx(_extractedImg, dilated, MORPH_DILATE, kernel);
-		subtract(dilated, _extractedImg, subtracted);
+		Mat subtracted, extractedImg, grayOriginal;
+		
+		//fill small holes in segmented image
+		Mat filledSeg = _segImg.clone(); //FIXME: deep copy
+		m_filler(filledSeg, 0, 500);
+		
+		cvtColor(_original, grayOriginal, COLOR_RGB2GRAY);
+		bitwise_and(grayOriginal, filledSeg, extractedImg);
 
-		threshold(subtracted, subtracted, 20, 255, THRESH_TOZERO);  //FIXME: Better way of thresholding
+		//StretchHistogramHorizontally(grayOriginal);
+		FindSubtractedImg(extractedImg, subtracted);
 
-		_refinedImg = subtracted.clone() - 1;  //making max intensity = 254
-		DrawBottomBorder(_refinedImg);
+		_refinedImg = subtracted.clone(); //FIXME: temp
+		
+		_refinedImg -= 1;  //making max intensity = 254
+
+		DrawHorizontalLines(_refinedImg);
+		
+		if(m_showStepByStep) {
+			imshow("show", _refinedImg);
+			waitKey(0);
+		}
 		m_filler(_refinedImg, m_minArea, m_maxArea); 
 
 		threshold(_refinedImg, _refinedImg, 254, 255, THRESH_BINARY); //keep only contours
 
+		if(m_showStepByStep) {
+			imshow("show", _refinedImg);
+			waitKey(0);
+		}
+
 		Mat laneScores;
-		FindLaneScores(_extractedImg, _refinedImg, laneScores);
+		FindLaneScores(grayOriginal, _refinedImg, laneScores);
+
+		morphologyEx(_refinedImg, _refinedImg, MORPH_CLOSE, getStructuringElement(MORPH_RECT, Size(4, 4)));
+
+		if(m_showStepByStep) {
+			imshow("show", laneScores);
+			waitKey(0);
+		}
 
 		laneScores -= 1;
 
 		m_filler(laneScores, m_minWidth, m_maxWidth, 0, FloodFill::OTHER_COLORS, false, FloodFill::WIDTH);
-		m_filler(laneScores, m_minLength, laneScores.cols + 1, 0, FloodFill::OTHER_COLORS, false, FloodFill::LENGTH);
+		threshold(laneScores, laneScores, 254, 255, THRESH_BINARY); //keep only contours
 		
-		threshold(laneScores, _refinedImg, 254, 255, THRESH_BINARY); //keep only contours
+		if(m_showStepByStep) {
+			imshow("show", laneScores);
+			waitKey(0);
+		}
 
+		laneScores -= 1;
+
+		m_filler(laneScores, m_minLength, laneScores.cols + 1, 0, FloodFill::OTHER_COLORS, false, FloodFill::LENGTH);
+		threshold(laneScores, _refinedImg, 254, 255, THRESH_BINARY); //keep only contours
+		
+		if(m_showStepByStep) {
+			imshow("show", _refinedImg);
+			waitKey(0);
+		}
 
 		//post process: fill points that are inside lanes
-		m_filler(_refinedImg, 0, 500);
+		morphologyEx(_refinedImg, _refinedImg, MORPH_DILATE, getStructuringElement(MORPH_RECT, Size(3, 3)));
+		m_filler(_refinedImg, 0, 500, 0, FloodFill::THIS_COLOR, false, FloodFill::AREA);
 
+		if(m_showStepByStep) {
+			imshow("show", _refinedImg);
+			waitKey(0);
+		}
 
 		if(m_debug)
 			cout << "Exiting LaneExtractor::Refine()" << endl;
@@ -159,22 +220,37 @@ namespace LD {
 			cout << "Exiting LaneExtractor::KeepOnlyPeaks()" << endl;
 	}
 
-	void LaneExtractor::DrawBottomBorder(Mat& _img, int _thickness, unsigned char _val) {
-		
+	void LaneExtractor::DrawHorizontalLines(Mat& _img, unsigned char _val) {
 		if(m_debug)
-			cout << "Entering LaneExtractor::DrawBottomBorder()" << endl;
-		
-		unsigned char *pImg;
+			cout << "Entering LaneExtractor::DrawHorizontalLines()" << endl;
 
-		//draw bottom border
-		for(int r = _img.rows - _thickness; r <= _img.rows - 1; r++) {
-			pImg = _img.ptr<unsigned char>(r);
-			for(int c = 0; c < _img.cols; c++)
-				pImg[c] = _val;
-		}
+		int incrementBy = _img.rows / (m_numHorizontalLines + 1);
+		for(int r = incrementBy; r < _img.rows; r += incrementBy)
+			_img.row(r) = _val;	
+			
+		if(m_debug)
+			cout << "Entering LaneExtractor::DrawHorizontalLines()" << endl;
+	}
+
+	void LaneExtractor::DrawBorders(Mat& _img, unsigned char _thickness, unsigned char _val) {
 		
 		if(m_debug)
-			cout << "Entering LaneExtractor::DrawBottomBorder()" << endl;
+			cout << "Entering LaneExtractor::DrawBorders()" << endl;
+		
+		//draw bottom border
+		for(int r = _img.rows - _thickness; r < _img.rows; r++)
+			_img.row(r) = _val;
+
+		//draw right border	
+		for(int c = _img.cols - _thickness; c < _img.cols; c++)
+			_img.col(c) = _val;
+
+		//draw left border
+		for(int c = 0; c <= _thickness; c++)
+			_img.col(c) = _val;
+
+		if(m_debug)
+			cout << "Entering LaneExtractor::DrawBorders()" << endl;
 	}
 
 	std::pair<int, int> LaneExtractor::FindMaxDiffs(const Mat& _road, const Mat& _edges, const int& _row, const int& _c, const int& _l, const int& _r, const int& _maxIts) {
