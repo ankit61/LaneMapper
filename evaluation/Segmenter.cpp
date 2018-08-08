@@ -55,6 +55,7 @@ namespace LD {
 		m_originalW = _inputImg.cols, m_originalH = _inputImg.rows;
 		Preprocess(_inputImg);
 		Segment(_segImg);
+		PostProcess(_segImg, _segImg);
 		
 		if(m_debug)
 			cout << "Exiting Segmenter::()" << endl;
@@ -78,6 +79,8 @@ namespace LD {
 				cout << "Successfully opened " << line << endl;
 		
 			this->operator()(inputImg, segImg);
+			cv::imshow("s", segImg);
+			cv::waitKey(0);
 			Save(inputImg, segImg);
 		}
 		
@@ -136,7 +139,7 @@ namespace LD {
 		}
 	}
 
-	void Segmenter::Segment(cv::Mat& _segImg) {
+	void Segmenter::Segment(cv::Mat& _rawOp) {
 		//outputs raw output of ICNet, where every pixel value stores 0-18 which is the 
 		//index (in m_labels) of the class that that pixel belongs to
 		
@@ -150,15 +153,15 @@ namespace LD {
 
 		Blob<float>* outputLayer = m_net->output_blobs()[0];
 		cv::Mat score(outputLayer->channels(), outputLayer->width() * outputLayer->height(), CV_32FC1, outputLayer->mutable_cpu_data());
-		score = score.t(); //transpose to take advantage of row major nature
-		_segImg = cv::Mat(outputLayer->height(), outputLayer->width(), CV_8UC1);
+		cv::transpose(score, score); //transpose to take advantage of row major nature
+		_rawOp = cv::Mat(outputLayer->height(), outputLayer->width(), CV_8UC1);
 		
 		double maxVal;
 		cv::Point maxIndex;
 		std::unordered_set<int> thingsIdentified;
 		for (int i = 0; i < score.rows; i++) {
 			minMaxLoc(score.row(i), 0, &maxVal, 0, &maxIndex);
-			_segImg.at<uchar>(i) = maxIndex.x;
+			_rawOp.at<uchar>(i) = maxIndex.x;
 			if(m_debug) {
 				if(thingsIdentified.find(maxIndex.x) == thingsIdentified.end()) {
 					cout << m_labels[maxIndex.x] << " found" << endl;
@@ -167,7 +170,7 @@ namespace LD {
 			}	
 		}
 		
-		cv::resize(_segImg, _segImg, cv::Size(m_originalW, m_originalH));
+		cv::resize(_rawOp, _rawOp, cv::Size(m_originalW, m_originalH));
 		
 		if(m_debug) {
 			cout << "Found segmented image" << endl;
@@ -175,14 +178,11 @@ namespace LD {
 		}
 	}
 
-	void Segmenter::Save(cv::Mat& _inputImg, cv::Mat& _segImg) {
-		//refines the _segImg into a more viewable form and finds the overlayed image
-		//It saves both images at desired locations
-		
-		//create Segmentation
+	void Segmenter::PostProcess(const cv::Mat& _rawOp, cv::Mat& _segImg) {
+		//saves segmented and overlayed images at desired locations
+
 		if(m_debug) {
-			cout << "Entering Segmenter::Save()" << endl;	
-			
+			cout << "Entering Segmenter::PostProcess()" << endl;
 			cout << "The number of channels and depths of the segmented image and the colormap must be the same" << endl;
 			
 			cout << "segmented image(rows, columns, channels, depth): " << 
@@ -193,14 +193,25 @@ namespace LD {
 			m_colormap.rows << " " << m_colormap.cols << " " << 
 			m_colormap.channels() << " " << m_colormap.depth() << endl;
 		}
+
+		cv::LUT(_rawOp, m_colormap, _segImg);
+
+		if(m_debug)
+			cout << "Exiting Segmenter::PostProcess()" << endl;
+	}
+
+	void Segmenter::Save(cv::Mat& _inputImg, cv::Mat& _segImg) {
+		// saves segmented and overlayed images at desired locations
 		
-		cv::LUT(_segImg, m_colormap, _segImg);
+		//create Segmentation
+		if(m_debug) 
+			cout << "Entering Segmenter::Save()" << endl;	
+		
 		string segImgName = m_segImgPrefix + m_imgBaseName;
 		vector<cv::Mat> channels;
 		
 		if(m_debug)
 			cout << "The number of rows, columns, and depths must be the same for different matrices" << endl;
-		
 
 		imwrite(m_segRoot + "/" +  segImgName, _segImg);
 		
@@ -212,7 +223,7 @@ namespace LD {
 			//create overlay
 			cv::Mat overlayed;
 			string overlayedImgName = m_vizImgPrefix + m_imgBaseName;
-			
+
 			vector<cv::Mat> channels;
 			cv::Mat black = cv::Mat::zeros(_segImg.rows, _segImg.cols, CV_8UC1);
 			channels.push_back(black);
@@ -225,8 +236,10 @@ namespace LD {
 		
 			imwrite(m_overlayedRoot + "/" +  overlayedImgName, overlayed);
 			
-			cout << "Image " << overlayedImgName << "saved in " << m_overlayedRoot << endl;		
-			cout << "Exiting Segmenter::Save()" << endl;
+			if(m_debug) {
+				cout << "Image " << overlayedImgName << "saved in " << m_overlayedRoot << endl;
+				cout << "Exiting Segmenter::Save()" << endl;
+			}
 		}
 	}
 }

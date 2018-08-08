@@ -21,6 +21,8 @@
 
 #include "Solver.h"
 
+//TODO: Calculate mean per image to see if that gives better results
+
 namespace LD {
 
 	using namespace caffe;
@@ -38,9 +40,9 @@ namespace LD {
 			/**< corresponds to the height of image that model takes as input */	
 			int m_cropSizeH;
 
-			double m_meanR; 	/**< means in red channel */
-			double m_meanG;		/**< means in green channel */
-			double m_meanB; 	/**< means in blue channel */
+			double m_meanR; 	/**< mean in red channel */
+			double m_meanG;		/**< mean in green channel */
+			double m_meanB; 	/**< mean in blue channel */
 
 			/**< stores 19 categories of cityscape on which the model is trained */
 			vector<string> m_labels;
@@ -81,13 +83,10 @@ namespace LD {
 
 			vector<cv::Mat> m_inputChannels;
 
-
 			/**
 			 * \brief preprocesses the input image (resizing, zero centering) so 
 			 * it can be fed into the model
 			 * \pre assumes Segmenter::WrapInputLayer() has been called before 
-			 * with _input_channels as input; also assumes that member variables 
-			 * are intialized
 			 * \param _inputImg input image as given by user
 			 */
 			void Preprocess(const cv::Mat& _inputImg);
@@ -96,21 +95,28 @@ namespace LD {
 			 * \brief outputs raw output of ICNet, where every pixel value stores 0-18
 			 *  which is the index (in m_labels) of the class that that pixel belongs to
 			 * \pre assumes Preprocess() has been called before
-			 * \param _segImg stores segmented image after completion
+			 * \param _rawOp stores raw output after completion
 			 */
-			void Segment(cv::Mat& _segImg);
+			void Segment(cv::Mat& _rawOp);
+			
+			/**
+			 * \brief refines _segImg into a viewable form
+			 * \pre assumes Segment() is called and its output is the first parameter
+			 * \param _rawOp same as outputted by Segmenter::Segment()
+			 * \param _segImg outputs b\w image where all white pixels correspond to road
+			 */
+			void PostProcess(const cv::Mat& _rawOp, cv::Mat& _segImg);
 
 			/**
-			 * \brief refines the _segmented_img into a more viewable form and finds
-			 * the overlayed image.  It saves both images at desired locations
-			 * \pre assumes Segment() is called and its output is the second parameter
+			 * \brief saves segmented and overlayed images at desired locations
+			 * \pre assumes PostProcess() is called and its output is the second parameter
 			 * \param _inputImg input image as given by user
-			 * \param _segImg as outputted by Segmenter::Segment()
+			 * \param _segImg as outputted by Segmenter::PostProcess()
 			 */
 			void Save(cv::Mat& _inputImg, cv::Mat& _segmentedImg);
 
 			/**
-			 * \brief makes elements of m_input_channels point to input layer of network 
+			 * \brief makes elements of m_inputChannels point to input layer of network 
 			 */
 			void WrapInputLayer();
 
@@ -128,6 +134,10 @@ namespace LD {
 			 */
 			virtual void Run() override;
 
+			/**
+			 * \brief responsible for the core task of Segmenter: takes an input image 
+			 *        and returns a b/w image where road pixels are white
+		 	 */
 			virtual void operator()(const cv::Mat& _inputImg, cv::Mat& _segImg);
 
 	};
