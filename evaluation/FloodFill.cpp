@@ -3,7 +3,7 @@
 
 namespace LD {
 
-	void FloodFill::operator()(cv::Mat& _in, const ulli& _lo, const ulli& _hi, const unsigned char _color, MatchingCriteria _matchBy, bool _includeBorders, Constraint _constraint) {
+	void FloodFill::operator()(cv::Mat& _in, const ulli& _lo, const ulli& _hi, bool _includeBorders, const unsigned char _color, MatchingCriteria _matchBy, Constraint _constraint) {
 
 		if(m_debug)
 			cout << "Entering FloodFill::()" << endl;

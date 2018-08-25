@@ -28,11 +28,11 @@ namespace LD {
 
 			FloodFill(string _xmlFile) : BaseLD(_xmlFile), m_borderNum(0) {}
 
-			void operator()(cv::Mat& _in, const ulli& _lo, const ulli& _hi, const unsigned char color = 0, MatchingCriteria _match_by = THIS_COLOR, bool _includeBorders = true, Constraint _constraint = AREA);
+			void operator()(cv::Mat& _in, const ulli& _lo, const ulli& _hi, bool _includeBorders = false, const unsigned char color = 0, MatchingCriteria _match_by = THIS_COLOR, Constraint _constraint = AREA);
 			
 		protected:
 
-			unsigned long long int Fill(cv::Mat& _in, vector<vector<long long int> >& _status, const cv::Point& _start, const ulli& _lo, const ulli& _hi, Status _curStatus = VISITED, const unsigned char color = 0, MatchingCriteria _match_by = THIS_COLOR, bool _includeBorders = true, Constraint _constraint = AREA);
+			unsigned long long int Fill(cv::Mat& _in, vector<vector<long long int> >& _status, const cv::Point& _start, const ulli& _lo, const ulli& _hi, Status _curStatus = VISITED, const unsigned char color = 0, MatchingCriteria _match_by = THIS_COLOR, bool _includeBorders = false, Constraint _constraint = AREA);
 
 			bool InBounds(const cv::Mat& _img, const cv::Point& _pt);
 
