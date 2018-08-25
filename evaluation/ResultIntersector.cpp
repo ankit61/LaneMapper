@@ -56,15 +56,13 @@ namespace LD {
 
 	}
 
-	void ResultIntersector::operator()(Mat& _veloPoints, const Mat& _segImg, const Mat& _refinedImg, Eigen::ArrayXXf& _intersectedPts) {
+	void ResultIntersector::operator()(Mat& _veloPoints, const Mat& _segImg, const Mat& _refinedImg, Eigen::ArrayXXf& _intersectedPts, Mat& _reflectivity, Eigen::MatrixXf& _veloImgPts) {
 		if(m_debug)
 			cout << "Entering ResultIntersector::()" << endl;
 		
-		Eigen::MatrixXf veloImgPts; 
-		Mat reflectivity;
-		Project(m_projectionMat, _veloPoints, veloImgPts, reflectivity);
-		double thresh = OtsuThresholdRoad(veloImgPts, _segImg, reflectivity);
-		IntersectIn3D(veloImgPts, _veloPoints, reflectivity, _refinedImg, thresh, _intersectedPts);
+		Project(_veloPoints, _veloImgPts, _reflectivity);
+		double thresh = OtsuThresholdRoad(_veloImgPts, _segImg, _reflectivity);
+		IntersectIn3D(_veloImgPts, _veloPoints, _reflectivity, _refinedImg, thresh, _intersectedPts);
 
 		if(m_debug)
 			cout << "Entering ResultIntersector::()" << endl;

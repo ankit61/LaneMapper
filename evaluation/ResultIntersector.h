@@ -11,7 +11,7 @@ namespace LD {
 		public:
 			ResultIntersector(string _xmlFile) : VeloProjector(_xmlFile) { ParseXML(); m_fout.open(m_outputRoot + "/" +m_outputFile); } 	
 
-			virtual void operator()(Mat& _veloPoints, const Mat& _segImg, const Mat& _refinedImg, Eigen::ArrayXXf& _intersectedPts);
+			void operator()(Mat& _veloPoints, const Mat& _segImg, const Mat& _refinedImg, Eigen::ArrayXXf& _intersectedPts, Mat& _reflectivity, Eigen::MatrixXf& _veloImgPoints);
 
 			bool isMode2D() { return m_printOnly2D; }
 		protected:
