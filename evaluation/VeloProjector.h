@@ -39,9 +39,9 @@ namespace LD {
 			Eigen::MatrixXf m_PRect, m_Tr, m_RRect, m_projectionMat;
 			CalibDataLoader m_calibDataLoader;
 
-			virtual void Project(const Eigen::MatrixXf& _PVeloToImg, Mat& _veloPoints, Eigen::MatrixXf& _veloImg, Mat& _reflectivity) final;
+			virtual void Project(Mat& _veloPoints, Eigen::MatrixXf& _veloImg, Mat& _reflectivity) final;
 			
-			void ComputeProjMat(Eigen::MatrixXf& _PVeloToImg);
+			void ComputeProjMat();
 
 			virtual void ProcessProjectedLidarPts(const Eigen::MatrixXf& _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, Mat& _inputImg) = 0;
 			

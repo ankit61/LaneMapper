@@ -3,6 +3,7 @@
 
 #include<Eigen/Dense>
 #include"BaseLD.h"
+#include"/home/ankit/Research/ALGLIB/src/interpolation.h"
 
 namespace LD {
 
@@ -11,6 +12,10 @@ namespace LD {
 	void ReadEigenMatFromFile(std::ifstream& _fin, Eigen::ArrayXXf& _data, bool _shouldTranspose);
 	
 	void ReadEigenMatFromFile(const string& _fileName, Eigen::ArrayXXf& _data, bool _shouldTranspose);
+
+	void CreateAlglibArray(const vector<Eigen::ArrayXf>& _samples, vector<alglib::real_1d_array>& _coordinates);
+	
+	void CreateAlglibArray(const Eigen::ArrayXXf _samples, vector<alglib::real_1d_array>& _coordinates);
 
 }
 

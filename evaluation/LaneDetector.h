@@ -9,14 +9,15 @@
 #include<Eigen/Dense>
 
 #include"Segmenter.h"
-#include"KPercentExtractor.h"
+#include"LaneExtractor.h"
 #include"ResultIntersector.h"
-#include"TLinkage/Line3DTLinkage.h"
+#include"TLinkage/BSplineTLinkage.h"
+#include"LaneQualityChecker.h"
 
 namespace LD {
 	class LaneDetector : public Solver {
 		public:
-			void operator()(const cv::Mat& _inputImg, cv::Mat& _veloPoints, vector<Eigen::ArrayXf>& _models);
+			void operator()(const cv::Mat& _inputImg, cv::Mat& _veloPoints, vector<Eigen::ArrayXf>& _models, float& _brightnessRatio, float& _reflectivityRatio);
 
 			virtual void Run() override;
 
@@ -24,12 +25,14 @@ namespace LD {
 		
 		protected:
 			Segmenter m_segmenter;
-			KPercentExtractor m_refiner;
+			LaneExtractor m_refiner;
 			ResultIntersector m_resultIntersector;
-			Line3DTLinkage m_line3DTLinkage;
+			BSplineTLinkage m_bSplineTLinkage;
+			LaneQualityChecker m_laneQualityChecker;
 
 			string m_imgFile, m_imgRoot, m_veloRoot;
 			string m_imgBaseName;
+			string m_ratiosFile;
 
 			virtual void ParseXML() override;
 	};
