@@ -105,7 +105,7 @@ namespace LD {
 
 		laneScores -= 1;
 
-		m_filler(laneScores, m_minWidth, m_maxWidth, 0, FloodFill::OTHER_COLORS, false, FloodFill::WIDTH);
+		m_filler(laneScores, m_minWidth, m_maxWidth, false, 0, FloodFill::OTHER_COLORS, FloodFill::WIDTH);
 		threshold(laneScores, laneScores, 254, 255, THRESH_BINARY); //keep only contours
 		
 		if(m_showStepByStep) {
@@ -115,7 +115,7 @@ namespace LD {
 
 		laneScores -= 1;
 
-		m_filler(laneScores, m_minLength, laneScores.cols + 1, 0, FloodFill::OTHER_COLORS, false, FloodFill::LENGTH);
+		m_filler(laneScores, m_minLength, laneScores.cols + 1, false, 0, FloodFill::OTHER_COLORS, FloodFill::LENGTH);
 		threshold(laneScores, _refinedImg, 254, 255, THRESH_BINARY); //keep only contours
 		
 		if(m_showStepByStep) {
@@ -125,7 +125,7 @@ namespace LD {
 
 		//post process: fill points that are inside lanes
 		morphologyEx(_refinedImg, _refinedImg, MORPH_DILATE, getStructuringElement(MORPH_RECT, Size(3, 3)));
-		m_filler(_refinedImg, 0, 500, 0, FloodFill::THIS_COLOR, false, FloodFill::AREA);
+		m_filler(_refinedImg, 0, 500);
 
 		if(m_showStepByStep) {
 			imshow("show", _refinedImg);
