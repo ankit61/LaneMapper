@@ -3,6 +3,7 @@
 #include"Utilities.h"
 
 namespace LD {
+	
 	bool isValid(long long int r, long long int c, long long int rows, long long int cols) {
 		return r >= 0 && c >= 0 && r < rows && c < cols;
 	}
@@ -53,4 +54,32 @@ namespace LD {
 			_data.transposeInPlace();
 	}
 
+	void CreateAlglibArray(const vector<Eigen::ArrayXf>& _samples, vector<alglib::real_1d_array>& _coordinates) {
+		if(!_samples.size())
+			return;
+
+		_coordinates.resize(_samples[0].size());
+		for(int i = 0; i < _coordinates.size(); i++)
+			_coordinates[i].setlength(_samples.size());
+
+		for(int i = 0; i < _coordinates.size(); i++) 
+			for(int j = 0; j < _samples.size(); j++) 
+				_coordinates[i](j) = _samples[j](i);
+	}
+
+
+	void CreateAlglibArray(const Eigen::ArrayXXf _samples, vector<alglib::real_1d_array>& _coordinates) {
+		if(!_samples.cols())
+			return;
+
+		_coordinates.resize(_samples.cols());
+		for(int i = 0; i < _coordinates.size(); i++)
+			_coordinates[i].setlength(_samples.rows());
+
+		for(int i = 0; i < _coordinates.size(); i++) 
+			for(int j = 0; j < _samples.rows(); j++) 
+				_coordinates[i](j) = _samples(j, i);
+	}
+
+	
 }

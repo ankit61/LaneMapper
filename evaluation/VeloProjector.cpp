@@ -30,7 +30,7 @@ namespace LD {
 		m_Tr << R, T,
 			 0, 0, 0, 1;
 		
-		ComputeProjMat(m_projectionMat);
+		ComputeProjMat();
 
 		if(m_debug)
 			cout << "Exiting VeloProjector::VeloProjector() " << endl;
@@ -82,7 +82,7 @@ namespace LD {
 				cout << "Successfully read input image: " << inputImgName << endl;
 
 			ReadVeloData(m_veloRoot + "/" + line.substr(0, line.size() - 3) + "bin", veloPoints);
-			Project(m_projectionMat, veloPoints, veloImgPts, reflectivity);
+			Project(veloPoints, veloImgPts, reflectivity);
 			ProcessProjectedLidarPts(veloImgPts, veloPoints, reflectivity, inputImg);
 		}
 
@@ -121,7 +121,7 @@ namespace LD {
 			cout << "Exiting VeloProjector::ReadVeloData() " << endl; 
 	}
 
-	void VeloProjector::ComputeProjMat(Eigen::MatrixXf& _PVeloToImg) {
+	void VeloProjector::ComputeProjMat() {
 		if(m_debug)
 			cout << "Entering VeloProjector::ComputeProjMat() " << endl;
 		
@@ -129,18 +129,18 @@ namespace LD {
 		
 		RCamToRect.topLeftCorner<3, 3>() = m_RRect;
 		
-		_PVeloToImg = m_PRect * RCamToRect * m_Tr; 	
+		m_projectionMat = m_PRect * RCamToRect * m_Tr; 	
 		if(m_debug)
 			cout << "Exiting VeloProjector::ComputeProjMat() " << endl;
 	}
 
-	void VeloProjector::Project(const Eigen::MatrixXf& _PVeloToImg, Mat& _veloPoints, Eigen::MatrixXf& _veloImg, Mat& _reflectivity) {
+	void VeloProjector::Project(Mat& _veloPoints, Eigen::MatrixXf& _veloImg, Mat& _reflectivity) {
 		
 		if(m_debug)
 			cout << "Entering VeloProjector::Project() " << endl;
 		
-		int dimNorm = _PVeloToImg.rows();
-		int dimProj = _PVeloToImg.cols();
+		int dimNorm = m_projectionMat.rows();
+		int dimProj = m_projectionMat.cols();
 
 		if(dimProj != _veloPoints.cols) 
 			throw std::runtime_error("incorrect dimensions to multiply");
@@ -153,7 +153,7 @@ namespace LD {
 		_reflectivity = _veloPoints.col(dimProj - 1).clone();	
 		veloPtsEg.col(dimProj - 1) = Eigen::MatrixXf::Ones(veloPtsEg.rows(), 1);
 
-		Eigen::MatrixXf newPoints = (_PVeloToImg * veloPtsEg.transpose()).transpose();
+		Eigen::MatrixXf newPoints = (m_projectionMat * veloPtsEg.transpose()).transpose();
 		
 		for(int i = 0; i < dimNorm - 1; i++)
 			newPoints.col(i).array() = newPoints.col(i).array() / newPoints.col(dimNorm - 1).array();
