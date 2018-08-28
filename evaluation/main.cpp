@@ -11,7 +11,7 @@
 #include"VeloProjector.h"
 #include"ResultIntersector.h"
 #include"SurfaceDataMaker.h"
-#include"LidarImageProjector.h"
+//#include"LidarImageProjector.h"
 
 #include"TLinkage/TLinkage.h"
 #include"TLinkage/Line2DTLinkage.h"
@@ -70,8 +70,8 @@ int main(int argc, char* argv[]) {
 		solverPtr = std::make_unique<DBScan>(argv[1]);
 	else if(boost::iequals(solver, "LaneDetector"))
 		solverPtr = std::make_unique<LaneDetector>(argv[1]);
-	else if(boost::iequals(solver, "LidarImageProjector"))
-		solverPtr = std::make_unique<LidarImageProjector>(argv[1]);
+//	else if(boost::iequals(solver, "LidarImageProjector"))
+//		solverPtr = std::make_unique<LidarImageProjector>(argv[1]);
 	else	
 		throw runtime_error("No such solver implemented: " + solver);
 
