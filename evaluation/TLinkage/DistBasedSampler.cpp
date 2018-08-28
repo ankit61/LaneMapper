@@ -1,33 +1,6 @@
 #include"DistBasedSampler.h"
 
 namespace LD {
-	void DistBasedSampler::operator()(const ArrayXXf& _data, ArrayXXf& _sampleIndices, 
-		const ulli& _numSamples, const ulli& _minSamples) {
-
-		if(m_debug)
-			cout << "Entering DistBasedSampler::operator() " << endl;
-
-		ArrayXXf cdfs;
-		_sampleIndices.resize(_minSamples, _numSamples);
-
-		FindCDF(_data, cdfs);
-		for(ulli i = 0; i < _numSamples; i++) {
-			_sampleIndices(0, i) = i % _data.cols();
-			std::unordered_set<ulli> uniques;
-			uniques.insert(_sampleIndices(0, i));
-
-			while(uniques.size() != _minSamples) { //TODO: should be able to ensure 0 repetitions
-				auto it = std::upper_bound(cdfs.col(_sampleIndices(0, i)).data(), cdfs.col(_sampleIndices(0, i)).data() + cdfs.rows(), (double) rand() / RAND_MAX);
-
-				_sampleIndices(uniques.size(), i) = std::distance(cdfs.col(_sampleIndices(0, i)).data(), it);
-				if(_sampleIndices(uniques.size(), i) != _data.cols())
-					uniques.insert(_sampleIndices(uniques.size(), i));
-			}
-		}
-
-		if(m_debug)
-			cout << "Exiting DistBasedSampler::operator() " << endl;
-	}
 
 	void DistBasedSampler::ParseXML() {
 		m_xml = m_xml.child("DistBased");
@@ -46,7 +19,46 @@ namespace LD {
 			throw runtime_error(measurementWay + " is not a valid way to measure");
 
 	}
-	
+
+	void DistBasedSampler::operator()(const ArrayXXf& _data, ArrayXXf& _sampleIndices, 
+		const ulli& _numSamples, const ulli& _minSamples) {
+
+		if(m_debug)
+			cout << "Entering DistBasedSampler::operator() " << endl;
+
+		if(_data.cols() < _minSamples)
+			throw MinSamplesNotFound();
+
+		ArrayXXf cdfs;
+		_sampleIndices.resize(_minSamples, _numSamples);
+
+		FindCDF(_data, cdfs);
+		for(ulli i = 0; i < _numSamples; i++) {
+			_sampleIndices(0, i) = i % _data.cols();
+			std::unordered_set<ulli> uniques;
+			uniques.insert(_sampleIndices(0, i));
+			ulli iterations = 0;
+			int tries = 0;
+			while(uniques.size() != _minSamples) { //TODO: should be able to ensure 0 repetitions
+				auto it = std::upper_bound(cdfs.col(_sampleIndices(0, i)).data(), cdfs.col(_sampleIndices(0, i)).data() + cdfs.rows(), (double) rand() / RAND_MAX);
+				_sampleIndices(uniques.size(), i) = std::distance(cdfs.col(_sampleIndices(0, i)).data(), it);
+				if(_sampleIndices(uniques.size(), i) != _data.cols())
+					uniques.insert(_sampleIndices(uniques.size(), i));
+
+				if(++iterations > m_maxIterationsFactor * _minSamples) {
+					(tries < m_maxTries) ? tries++ : throw MinSamplesNotFound();
+					_sampleIndices(0, i) = rand() % _data.cols();
+					uniques.clear();
+					uniques.insert(_sampleIndices(0, i));
+					iterations = 0;
+				}
+			}
+		}
+
+		if(m_debug)
+			cout << "Exiting DistBasedSampler::operator() " << endl;
+	}
+		
 	void DistBasedSampler::FindCDF(const ArrayXXf& _data, ArrayXXf& _cdfs) {
 		if(m_debug)
 			cout << "Entering DistBasedSampler::FindCDF() " << endl;
@@ -71,11 +83,10 @@ namespace LD {
 			if(colSum > 0.00001) { 
 				_cdfs(0, c) /= colSum;
 				for(ulli r = 1; r < _cdfs.rows(); r++)
-					_cdfs(r, c) = _cdfs(r, c) / colSum + _cdfs(r - 1,c);
+					_cdfs(r, c) = _cdfs(r, c) / colSum + _cdfs(r - 1, c);
 			}
 			else {
 				//create uniform distribution
-
 				for(ulli r = 0; r < _cdfs.rows(); r++)
 					_cdfs(r, c) = (double)(r + 1) / _cdfs.rows();
 
@@ -91,7 +102,7 @@ namespace LD {
 			case EUCLIDEAN:
 				return (pt1 - pt2).matrix().norm();
 			case ABS_VERTICAL_DEGREE:
-				return (180 / M_PI) * (std::atan(std::abs((double)(pt2[1] - pt1[1]) / (pt2[0] - pt1[0]))));
+				return (pt2[0] - pt1[0]) <= 0.01 ? 0 : (180 / M_PI) * (std::atan(std::abs((double)(pt2[1] - pt1[1]) / (pt2[0] - pt1[0]))));
 		}
 	}
 	

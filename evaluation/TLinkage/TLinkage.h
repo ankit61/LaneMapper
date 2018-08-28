@@ -50,7 +50,7 @@ namespace LD {
 			
 			void PrintClustersToFile(const ArrayXf& _clusters, const string& _imgName);
 			
-			void PrintModelsToFile(vector<ArrayXf> _models, const string& _imgName);
+			virtual void PrintModelsToFile(vector<ArrayXf> _models, const string& _imgName);
 
 			TLinkage(int _minSamples, int _modelParams, string _xmlFile);
 
