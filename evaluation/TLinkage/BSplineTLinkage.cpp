@@ -65,9 +65,7 @@ namespace LD {
 
 		spline1dunpack(yOfX, ctrlPts, yCoeffs); 
 		spline1dunpack(zOfX, ctrlPts, zCoeffs);
-
-		ArrayXf reconstructedModel = ConvertCoeffsTable2Model(yCoeffs, zCoeffs);
-
+		
 		//brute force to find minimum distance (shouldn't be very expensive for realistic m_minX and m_maxX)
 		float minDist = std::numeric_limits<float>::max();
 		for(float x = m_minX; x <= m_maxX; x += m_resolution) {
@@ -98,16 +96,6 @@ namespace LD {
 
 		spline1dfitpenalized(coordinates[0], coordinates[2], m_minSamples - 2, m_regularizationConst, info, zOfX, rep);
 
-		float low = 100, high = 0;
-		for(int i = 0; i < coordinates[0].length(); i++) {
-			low = std::min(low, float(coordinates[0](i)));
-			high = std::max(high, float(coordinates[0](i)));
-		}
-
-		for(; low <= high; low += 0.1) {
-			cout << low << "\t" << spline1dcalc(yOfX, low) << "\t" << spline1dcalc(zOfX, low) << endl;
-		}
-		
 		if(info < 0)
 			throw runtime_error("Can't fit least square spline");
 
@@ -151,9 +139,6 @@ namespace LD {
 	
 	ArrayXf BSplineTLinkage::ConvertCoeffsTable2Model(alglib::real_2d_array& _yCoeffs, alglib::real_2d_array& _zCoeffs) {
 		
-		if(m_debug)
-			cout << "Entering BSplineTLinkage::ConvertCoeffsTable2Model()" << endl;
-		
 		ArrayXf hypothesis(m_modelParams);
 		hypothesis(0) = 1 + _yCoeffs.rows() * _yCoeffs.cols(); // first index where zCoeffs start
 		
@@ -165,9 +150,6 @@ namespace LD {
 			for(int c = 0; c < _zCoeffs.cols(); c++) 
 				hypothesis(hypothesis(0) + c + r * _zCoeffs.cols()) = _zCoeffs(r, c);
 		
-		if(m_debug)
-			cout << "Exiting BSplineTLinkage::ConvertCoeffsTable2Model()" << endl;
-
 		return hypothesis;
 
 	}
