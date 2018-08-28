@@ -8,6 +8,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 set(ICNET_ROOT "/home/ankit/Research/ICNet")
 set(PUGIXML_ROOT "/home/ankit/Research/pugixml-1.9")
+set(ALGLIB_ROOT "/home/ankit/Research/ALGLIB")
 
 # include directory
 include_directories(
@@ -37,9 +38,11 @@ add_definitions(
 	-DCAFFE_VERSION=1.0.0-rc3 
 #	-DNDEBUG 
 	-DUSE_OPENCV 
-	-DUSE_LEVELDB 
+	-DUSE_LEVELDB
+	-DAE_CPU=AE_INTEL
 	-DUSE_LMDB 
 	-DCPU_ONLY
+	-DAE_CPU=AE_INTEL
 )
 
 add_executable(
@@ -52,7 +55,8 @@ add_executable(
 	LaneExtractor.cpp
 	VeloProjector.cpp 
 	ResultIntersector.cpp 
-	SurfaceDataMaker.cpp 
+	SurfaceDataMaker.cpp
+	LaneQualityChecker.cpp
 	TLinkage/TLinkage.cpp
 	TLinkage/Line2DTLinkage.cpp
 	TLinkage/PlaneTLinkage.cpp
@@ -68,6 +72,19 @@ add_executable(
 	FloodFill.cpp
 	Utilities.cpp
 	DBScan/DBScan.cpp
+	${ALGLIB_ROOT}/src/alglibinternal.cpp
+	${ALGLIB_ROOT}/src/alglibmisc.cpp
+	${ALGLIB_ROOT}/src/ap.cpp
+	${ALGLIB_ROOT}/src/dataanalysis.cpp
+	${ALGLIB_ROOT}/src/diffequations.cpp
+	${ALGLIB_ROOT}/src/fasttransforms.cpp
+	${ALGLIB_ROOT}/src/integration.cpp
+	${ALGLIB_ROOT}/src/interpolation.cpp
+	${ALGLIB_ROOT}/src/linalg.cpp
+	${ALGLIB_ROOT}/src/optimization.cpp
+	${ALGLIB_ROOT}/src/solvers.cpp
+	${ALGLIB_ROOT}/src/specialfunctions.cpp
+	${ALGLIB_ROOT}/src/statistics.cpp
 )
 
 target_link_libraries(LaneDetection ${OpenCV_LIBS} ${LIBS})
