@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <Document>
 
 	<Solvers>
@@ -161,7 +160,7 @@
 			 veloRoot = directory which stores all bin files containing Lidar points
 		 -->
 		
-		<LaneDetector imgRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data/" imgFile="images.txt" veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" ratiosFile="/media/sf_Autonomous_Driving/ratios178.txt"/>
+		<LaneDetector imgRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data/" imgFile="images.txt" veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" ratiosFile="test.txt"/>
 
 	</Solvers>
 
