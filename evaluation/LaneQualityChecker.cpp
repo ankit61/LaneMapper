@@ -46,15 +46,12 @@ namespace LD {
 		float laneReflectivityMean = 0, roadReflectivityMean = 0;
 		float laneBrightnessMean = 0, roadBrightnessMean = 0;
 		ulli roadPts = 0, lanePts = 0;
-		Mat allButLanes(grayImg.size(), grayImg.type());
-		allButLanes = 255;
 		for(ulli i = 0; i < _veloPoints.rows; i++) {
 			int c = _veloImg(i, 0), r = _veloImg(i, 1);
 			if(isValid(r, c, grayImg.rows, grayImg.cols)) {
 				if(lanePtsSet.find(toString(_veloPoints.at<float>(i, 0), _veloPoints.at<float>(i, 1), _veloPoints.at<float>(i, 2))) != lanePtsSet.end()) {
 					laneReflectivityMean += _reflectivity.at<float>(i, 0);
 					laneBrightnessMean += grayImg.at<unsigned char>(r, c);
-					allButLanes = 0;
 					lanePts++;
 				}
 				else if(_segmentedImg.at<unsigned char>(r, c)) {

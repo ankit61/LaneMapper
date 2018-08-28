@@ -36,13 +36,11 @@ namespace LD {
 		Eigen::ArrayXf clusters;
 		Mat reflectivity;
 		Eigen::MatrixXf veloImg;
-
 		m_segmenter(_inputImg, segImg);
 		m_refiner(_inputImg, segImg, refinedImg);
 		m_resultIntersector(_veloPoints, segImg, refinedImg, intersectedPts, reflectivity, veloImg);
 		m_bSplineTLinkage(intersectedPts, clusters, _models);
 		m_laneQualityChecker(intersectedPts, clusters, _veloPoints, reflectivity, veloImg, _inputImg, segImg, _brightnessRatio, _reflectivityRatio);
-		
 		if(m_debug)
 			cout << "Exiting LaneDetector::()" << endl;
 	}
@@ -62,11 +60,25 @@ namespace LD {
 			vector<Eigen::ArrayXf> models;
 			inputImg = cv::imread(m_imgRoot + "/" + line);
 			m_resultIntersector.ReadVeloData(m_veloRoot + "/" + line.substr(0, line.size() - 3) + "bin", veloPoints);
-			this->operator()(inputImg, veloPoints, models, brightnessRatio, reflectivityRatio);
-			m_bSplineTLinkage.PrintModelsToFile(models, m_imgBaseName);
-			fout << m_imgBaseName << endl;
-			fout << brightnessRatio << endl;
-			fout << reflectivityRatio << endl;
+			try {
+				this->operator()(inputImg, veloPoints, models, brightnessRatio, reflectivityRatio);
+				m_bSplineTLinkage.PrintModelsToFile(models, m_imgBaseName);
+				fout << m_imgBaseName << endl;
+				fout << brightnessRatio << endl;
+				fout << reflectivityRatio << endl;
+			}
+			catch(Sampler::MinSamplesNotFound) {
+				fout << m_imgBaseName << endl;
+				fout << "---------------------WARNING: Could not find enough samples-----------" << endl;	
+			}
+			catch(alglib::ap_error& e) {
+				fout << m_imgBaseName << endl;
+				fout << "---------------------WARNING: ALGLIB Error: " << e.msg << "-----------" << endl;
+			}
+			catch(...) {
+				fout << m_imgBaseName << endl;
+				fout << "----------------------------Warning: Unknown Error------------------------------" << endl;
+			}
 		}
 
 		if(m_debug)
