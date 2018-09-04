@@ -10,9 +10,11 @@
 
 #include"Segmenter.h"
 #include"LaneExtractor.h"
+#include"KPercentExtractor.h"
 #include"ResultIntersector.h"
 #include"TLinkage/BSplineTLinkage.h"
 #include"LaneQualityChecker.h"
+#include"PointsVisualizer.h"
 
 namespace LD {
 	class LaneDetector : public Solver {
@@ -29,10 +31,13 @@ namespace LD {
 			ResultIntersector m_resultIntersector;
 			BSplineTLinkage m_bSplineTLinkage;
 			LaneQualityChecker m_laneQualityChecker;
+			PointsVisualizer m_visualizer;
 
 			string m_imgFile, m_imgRoot, m_veloRoot;
 			string m_imgBaseName;
 			string m_ratiosFile;
+			bool m_saveVizImg;
+			string m_vizImgPrefix;
 
 			virtual void ParseXML() override;
 	};

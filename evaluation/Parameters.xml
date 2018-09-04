@@ -1,4 +1,4 @@
-<Document>
+	<Document>
 
 	<Solvers>
 		
@@ -111,7 +111,7 @@
 				 errorThreshold = the maximum average least square distance from all points in a cluster to the parallel line constructed
 			-->
 				<Line3D minShift="2.7" maxShift="6" resolution="0.025" errorThreshold="1"/>
-				<BSpline minSamples="6" regularizationConst="2" resolution="0.25"  minX="5" maxX="80"/>
+				<BSpline minSamples="8" regularizationConst="2" resolution="0.25"  minX="5" maxX="80"/>
 			</Models>
 
 			<!-- inlierThreshold = maximum distance between a model and a sample that fits the model-->
@@ -160,10 +160,10 @@
 			 veloRoot = directory which stores all bin files containing Lidar points
 		 -->
 		
-		<LaneDetector imgRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data/" imgFile="images.txt" veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" ratiosFile="test.txt"/>
+		<LaneDetector imgRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data/" imgFile="images.txt" veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" ratiosFile="test.txt" saveVizImg="true" vizImgPrefix="/media/sf_Autonomous_Driving/CPPSplines/spline_"/>
 
 	</Solvers>
 
-	<Main solver="LaneDetector" debug="true"/>
+	<Main solver="LaneExtractor" debug="true"/>
 
 </Document>

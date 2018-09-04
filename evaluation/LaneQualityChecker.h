@@ -11,7 +11,7 @@ namespace LD {
 
 			LaneQualityChecker(string _xmlFile);
 
-			virtual void operator()(const Eigen::ArrayXXf& _intersectedPts, const Eigen::ArrayXf& _clusters, const cv::Mat& _veloPoints, const Mat& _reflectivity, const Eigen::MatrixXf& _veloImg, const Mat& _inputImg, const Mat& _segmentedImg, float& _reflectivityRatio, float& _brightnessRatio);
+			virtual void operator()(const Eigen::ArrayXXf& _intersectedPts, const Eigen::ArrayXf& _clusters, const cv::Mat& _veloPoints, const Mat& _reflectivity, const Eigen::MatrixXf& _veloImg, const Mat& _inputImg, const Mat& _segmentedImg, const Mat& _refinedImg, float& _reflectivityRatio, float& _brightnessRatio);
 
 		protected:
 

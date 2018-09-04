@@ -41,6 +41,8 @@ namespace LD {
 
 			virtual void Project(Mat& _veloPoints, Eigen::MatrixXf& _veloImg, Mat& _reflectivity) final;
 			
+			virtual void Project(Eigen::ArrayXXf& _veloPoints, Eigen::MatrixXf& _veloImg) final;
+			
 			void ComputeProjMat();
 
 			virtual void ProcessProjectedLidarPts(const Eigen::MatrixXf& _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, Mat& _inputImg) = 0;

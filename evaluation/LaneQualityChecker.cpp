@@ -23,11 +23,12 @@ namespace LD {
 
 	string toString(const float& _f1, const float& _f2, const float& _f3) {
 		std::ostringstream os;
-		os << std::fixed << std::setprecision(2) << _f1 << _f2 << _f3;
+		os << std::fixed << std::setprecision(2) << _f1 << "-" << _f2 << "-" << _f3;
 		return os.str();
 	}
 
-	void LaneQualityChecker::operator()(const Eigen::ArrayXXf& _intersectedPts, const Eigen::ArrayXf& _clusters, const cv::Mat& _veloPoints, const Mat& _reflectivity, const Eigen::MatrixXf& _veloImg, const Mat& _inputImg, const Mat& _segmentedImg, float& _reflectivityRatio, float& _brightnessRatio) {
+	void LaneQualityChecker::operator()(const Eigen::ArrayXXf& _intersectedPts, const Eigen::ArrayXf& _clusters, const cv::Mat& _veloPoints, const Mat& _reflectivity, const Eigen::MatrixXf& _veloImg, const Mat& _inputImg, const Mat& _segmentedImg, const Mat& _refinedImg, float& _brightnessRatio, float& _reflectivityRatio) {
+		
 		if(m_debug)
 			cout << "Entering LaneQualityChecker::()" << endl;
 		
@@ -51,7 +52,6 @@ namespace LD {
 			if(isValid(r, c, grayImg.rows, grayImg.cols)) {
 				if(lanePtsSet.find(toString(_veloPoints.at<float>(i, 0), _veloPoints.at<float>(i, 1), _veloPoints.at<float>(i, 2))) != lanePtsSet.end()) {
 					laneReflectivityMean += _reflectivity.at<float>(i, 0);
-					laneBrightnessMean += grayImg.at<unsigned char>(r, c);
 					lanePts++;
 				}
 				else if(_segmentedImg.at<unsigned char>(r, c)) {
@@ -61,11 +61,16 @@ namespace LD {
 			}
 		}
 		
+		Mat lanes;
+		bitwise_and(grayImg, _refinedImg, lanes);
 		bitwise_and(grayImg, _segmentedImg, grayImg);
-		roadBrightnessMean = (sum(grayImg)[0] - laneBrightnessMean) / (countNonZero(grayImg) - lanePts);
-		
+		int lanePtsImg = countNonZero(lanes);
+		laneBrightnessMean = (float) sum(lanes)[0];
+		roadBrightnessMean = (sum(grayImg)[0] - laneBrightnessMean) / (countNonZero(grayImg) - lanePtsImg);
+		laneBrightnessMean /= lanePtsImg;
+
 		laneReflectivityMean /= lanePts;
-		laneBrightnessMean /= lanePts;
+		
 		roadReflectivityMean /= roadPts;
 
 		_reflectivityRatio = laneReflectivityMean / roadReflectivityMean;

@@ -1,4 +1,5 @@
 #include"DistBasedSampler.h"
+#include<iomanip>
 
 namespace LD {
 
@@ -44,7 +45,6 @@ namespace LD {
 				_sampleIndices(uniques.size(), i) = std::distance(cdfs.col(_sampleIndices(0, i)).data(), it);
 				if(_sampleIndices(uniques.size(), i) != _data.cols())
 					uniques.insert(_sampleIndices(uniques.size(), i));
-
 				if(++iterations > m_maxIterationsFactor * _minSamples) {
 					(tries < m_maxTries) ? tries++ : throw MinSamplesNotFound();
 					_sampleIndices(0, i) = rand() % _data.cols();
@@ -66,11 +66,11 @@ namespace LD {
 		//create pdf
 		double dist;
 		_cdfs.resize(_data.cols(), _data.cols());
-		for(ulli r = 0; r < _data.cols(); r++) {
-			for(ulli c = 0; c < _data.cols(); c++) {
-				dist = Distance(_data.col(r), _data.col(c));
-				if(dist < m_maxDiff)
-					_cdfs(r, c) = (dist == 0) ? 0 : std::exp(-dist * m_sigma / m_maxDiff);
+		for(ulli c = 0; c < _cdfs.cols(); c++) {
+			for(ulli r = 0; r < _cdfs.rows(); r++) {
+				dist = DistBasedSampler::Distance(_data.col(r), _data.col(c));
+				if(dist < m_maxDiff && dist > 0)
+					_cdfs(r, c) = std::exp(-dist * m_sigma / m_maxDiff);
 				else
 					_cdfs(r, c) = 0;
 			}
@@ -80,7 +80,7 @@ namespace LD {
 		double colSum;
 		for(ulli c = 0; c < _cdfs.cols(); c++) {	
 			colSum = _cdfs.col(c).sum();
-			if(colSum > 0.00001) { 
+			if(colSum > 0.001) { 
 				_cdfs(0, c) /= colSum;
 				for(ulli r = 1; r < _cdfs.rows(); r++)
 					_cdfs(r, c) = _cdfs(r, c) / colSum + _cdfs(r - 1, c);
@@ -89,7 +89,6 @@ namespace LD {
 				//create uniform distribution
 				for(ulli r = 0; r < _cdfs.rows(); r++)
 					_cdfs(r, c) = (double)(r + 1) / _cdfs.rows();
-
 			}
 		}
 
@@ -102,7 +101,7 @@ namespace LD {
 			case EUCLIDEAN:
 				return (pt1 - pt2).matrix().norm();
 			case ABS_VERTICAL_DEGREE:
-				return (pt2[0] - pt1[0]) <= 0.01 ? 0 : (180 / M_PI) * (std::atan(std::abs((double)(pt2[1] - pt1[1]) / (pt2[0] - pt1[0]))));
+				return (std::abs(pt2[0] - pt1[0]) <= 0.01) ? 0 : (180 / M_PI) * (std::atan(std::abs((double)(pt2[1] - pt1[1]) / (pt2[0] - pt1[0]))));
 		}
 	}
 	

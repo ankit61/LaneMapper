@@ -257,6 +257,7 @@ namespace LD {
 			for(ulli r = 0; r < _sampleIndices.rows(); r++)
 				samples[r] = _data.col(_sampleIndices(r, c));
 			_hypotheses.col(c) = GenerateHypothesis(samples);
+			
 		}
 
 		if(m_debug)

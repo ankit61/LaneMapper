@@ -69,6 +69,7 @@ add_executable(
 	TLinkage/MaxDiffOR.cpp
 	TLinkage/UniformSampler.cpp
 	TLinkage/DistBasedSampler.cpp
+	PointsVisualizer.cpp
 	FloodFill.cpp
 	Utilities.cpp
 	DBScan/DBScan.cpp

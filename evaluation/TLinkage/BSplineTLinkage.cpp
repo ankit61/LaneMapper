@@ -20,7 +20,7 @@ namespace LD {
 		m_resolution		  = m_xml.attribute("resolution").as_float();
 		m_minX 				  = m_xml.attribute("minX").as_float();
 		m_maxX 				  = m_xml.attribute("maxX").as_float();
-
+		
 		if(m_minSamples <= 5 || m_resolution <= 0 || m_minX <= 0 || m_maxX <= 0)
 			throw runtime_error("at least one attribute is missing/invalid: minSamples, regularizationConst, resolution, minX, maxX");
 		
@@ -173,6 +173,30 @@ namespace LD {
 
 		if(m_debug)
 			cout << "Exiting BSplineTLinkage::PrintModelsToFile()" << endl;
+	}
+
+	void BSplineTLinkage::VisualizeModel(ArrayXf& _model, ArrayXXf& _coordinates) {
+		if(m_debug)
+			cout << "Entering BSplineTLinkage::VizualizeModels()" << endl;
+
+		int zCoeffsStart = _model(0);
+		int numXTerms = (_model(zCoeffsStart - 5) - _model(1)) / m_resolution;
+		_coordinates.resize(numXTerms, 3);
+		_coordinates = 0;
+		_coordinates.col(0).setLinSpaced(numXTerms, _model(1), _model(zCoeffsStart - 5));
+		int j = 0;
+		for(int i = 0; i < _coordinates.rows(); i++) {
+			float x = _coordinates(i, 0);
+			int yStart = m_params1dSpline * j + 1;
+			int zStart = m_params1dSpline * j + zCoeffsStart;
+			j += (x >= _model(yStart) && x <= _model(yStart + 1)) ? 0 : 1;
+			float t = x - _model(yStart);
+			_coordinates(i, 1) += _model(yStart + 2) + t * (_model(yStart + 3) + t * (_model(yStart + 4) + t * _model(yStart + 5)));
+			_coordinates(i, 2) += _model(zStart + 2) + t * (_model(zStart + 3) + t * (_model(zStart + 4) + t * _model(zStart + 5)));
+		}
+
+		if(m_debug)
+			cout << "Exiting BSplineTLinkage::VizualizeModels()" << endl;
 	}
 
 }

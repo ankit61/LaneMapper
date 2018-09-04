@@ -29,7 +29,7 @@ namespace LD {
 
 		m_Tr << R, T,
 			 0, 0, 0, 1;
-		
+
 		ComputeProjMat();
 
 		if(m_debug)
@@ -70,7 +70,7 @@ namespace LD {
 		Eigen::MatrixXf projectionMat, veloImgPts; 
 		Mat veloPoints, reflectivity;
 		while(std::getline(fin, line)) {
-		
+
 			m_imgBaseName  = string(basename(const_cast<char*>(line.c_str())));
 			string inputImgName = m_dataRoot + "/" + line;
 
@@ -124,37 +124,41 @@ namespace LD {
 	void VeloProjector::ComputeProjMat() {
 		if(m_debug)
 			cout << "Entering VeloProjector::ComputeProjMat() " << endl;
-		
+
 		Eigen::MatrixXf RCamToRect = Eigen::MatrixXf::Identity(4, 4);
-		
+
 		RCamToRect.topLeftCorner<3, 3>() = m_RRect;
-		
+
 		m_projectionMat = m_PRect * RCamToRect * m_Tr; 	
 		if(m_debug)
 			cout << "Exiting VeloProjector::ComputeProjMat() " << endl;
 	}
 
 	void VeloProjector::Project(Mat& _veloPoints, Eigen::MatrixXf& _veloImg, Mat& _reflectivity) {
-		
+
 		if(m_debug)
 			cout << "Entering VeloProjector::Project() " << endl;
-		
+
 		int dimNorm = m_projectionMat.rows();
 		int dimProj = m_projectionMat.cols();
 
-		if(dimProj != _veloPoints.cols) 
+		if(_veloPoints.cols == dimProj - 1) {
+			Mat col(_veloPoints.rows, 1, _veloPoints.type(), 1);
+			hconcat(_veloPoints, col, _veloPoints);
+		}
+		else if(_veloPoints.cols < dimProj)
 			throw std::runtime_error("incorrect dimensions to multiply");
 
 		if(!_veloPoints.isContinuous())
 			throw std::runtime_error("matrix is not continuous");
 
 		Eigen::Map<Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> > veloPtsEg(_veloPoints.ptr<float>(), _veloPoints.rows, _veloPoints.cols);
-		
+
 		_reflectivity = _veloPoints.col(dimProj - 1).clone();	
 		veloPtsEg.col(dimProj - 1) = Eigen::MatrixXf::Ones(veloPtsEg.rows(), 1);
 
 		Eigen::MatrixXf newPoints = (m_projectionMat * veloPtsEg.transpose()).transpose();
-		
+
 		for(int i = 0; i < dimNorm - 1; i++)
 			newPoints.col(i).array() = newPoints.col(i).array() / newPoints.col(dimNorm - 1).array();
 
@@ -163,4 +167,32 @@ namespace LD {
 		if(m_debug)
 			cout << "Exiting VeloProjector::Project() " << endl;
 	}
+
+	void VeloProjector::Project(Eigen::ArrayXXf& _veloPoints, Eigen::MatrixXf& _veloImg) {
+		if(m_debug)
+			cout << "Entering VeloProjector::Project() " << endl;
+
+		int dimNorm = m_projectionMat.rows();
+		int dimProj = m_projectionMat.cols();
+
+		if(_veloPoints.cols() == dimProj - 1) {
+			_veloPoints.conservativeResize(Eigen::NoChange, _veloPoints.cols() + 1);
+			_veloPoints.col(_veloPoints.cols() - 1) = 1;
+
+		}
+		else if(_veloPoints.cols() < dimProj)
+			throw std::runtime_error("incorrect dimensions to multiply");
+
+		Eigen::MatrixXf newPoints = (m_projectionMat * _veloPoints.matrix().transpose()).transpose();
+
+		for(int i = 0; i < dimNorm - 1; i++)
+			newPoints.col(i).array() = newPoints.col(i).array() / newPoints.col(dimNorm - 1).array();
+
+		_veloImg = newPoints.topLeftCorner(newPoints.rows(), newPoints.cols() - 1);
+
+		if(m_debug)
+			cout << "Exiting VeloProjector::Project() " << endl;
+
+	}
+
 }

@@ -23,6 +23,8 @@ namespace LD {
 
 			virtual void PrintModelsToFile(vector<ArrayXf> _models, const string& _imgName) override;
 
+			void VisualizeModel(ArrayXf& _model, ArrayXXf& _coordinates);
+
 		protected:
 			void ParseXML() override;
 
