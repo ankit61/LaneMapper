@@ -10,16 +10,18 @@
 
 #include"VeloProjector.h"
 #include"ResultIntersector.h"
-#include"SurfaceDataMaker.h"
+//#include"SurfaceDataMaker.h"
 //#include"LidarImageProjector.h"
 
 #include"TLinkage/TLinkage.h"
+/*
 #include"TLinkage/Line2DTLinkage.h"
 #include"TLinkage/PlaneTLinkage.h"
 #include"TLinkage/Circle2DTLinkage.h"
 #include"TLinkage/SurfaceTLinkage.h"
 #include"TLinkage/RoadTLinkage.h"
 #include"TLinkage/Line3DTLinkage.h"
+*/
 #include"TLinkage/BSplineTLinkage.h"
 
 #include"DBScan/DBScan.h"
@@ -50,7 +52,7 @@ int main(int argc, char* argv[]) {
 		solverPtr = std::make_unique<LaneExtractor>(argv[1]);
 	else if(boost::iequals(solver, "ResultIntersector"))
 		solverPtr = std::make_unique<ResultIntersector>(argv[1]);
-	else if(boost::iequals(solver, "SurfaceDataMaker"))
+/*	else if(boost::iequals(solver, "SurfaceDataMaker"))
 		solverPtr = std::make_unique<SurfaceDataMaker>(argv[1]);	
 	else if(boost::iequals(solver, "Line2DTLinkage"))
 		solverPtr = std::make_unique<Line2DTLinkage>(argv[1]);
@@ -64,7 +66,7 @@ int main(int argc, char* argv[]) {
 		solverPtr = std::make_unique<RoadTLinkage>(argv[1]);
 	else if(boost::iequals(solver, "Line3DTLinkage"))
 		solverPtr = std::make_unique<Line3DTLinkage>(argv[1]);
-	else if(boost::iequals(solver, "BSplineTLinkage"))
+*/	else if(boost::iequals(solver, "BSplineTLinkage"))
 		solverPtr = std::make_unique<BSplineTLinkage>(argv[1]);
 	else if(boost::iequals(solver, "DBScan"))
 		solverPtr = std::make_unique<DBScan>(argv[1]);

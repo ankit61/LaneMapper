@@ -55,15 +55,15 @@ add_executable(
 	LaneExtractor.cpp
 	VeloProjector.cpp 
 	ResultIntersector.cpp 
-	SurfaceDataMaker.cpp
+#	SurfaceDataMaker.cpp
 	LaneQualityChecker.cpp
 	TLinkage/TLinkage.cpp
-	TLinkage/Line2DTLinkage.cpp
-	TLinkage/PlaneTLinkage.cpp
-	TLinkage/Circle2DTLinkage.cpp
-	TLinkage/SurfaceTLinkage.cpp
-	TLinkage/RoadTLinkage.cpp
-	TLinkage/Line3DTLinkage.cpp
+#	TLinkage/Line2DTLinkage.cpp
+#	TLinkage/PlaneTLinkage.cpp
+#	TLinkage/Circle2DTLinkage.cpp
+#	TLinkage/SurfaceTLinkage.cpp
+#	TLinkage/RoadTLinkage.cpp
+#	TLinkage/Line3DTLinkage.cpp
 	TLinkage/BSplineTLinkage.cpp
 	TLinkage/KLargestOR.cpp
 	TLinkage/MaxDiffOR.cpp
