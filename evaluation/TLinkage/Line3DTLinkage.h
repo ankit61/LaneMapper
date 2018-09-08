@@ -19,16 +19,10 @@ namespace LD {
 
 			virtual void ParseXML() override;
 			
-			void ShiftModel(ArrayXf& _originalModel, const vector<ulli>& _clusteredIndices, const ArrayXXf& _data, bool _isOriginalModelOnRight, ArrayXf& _shiftedModel);
+			virtual void ShiftModelBy(ArrayXf& _model, const float& _shiftBy);
 
-			
-			bool IsModelOnRight(const ArrayXf& _model);
+			virtual bool IsModelOnRight(const ArrayXf& _model) override;
 	
-			float EvaluateModel(const ArrayXf& _model, const vector<ulli>& _clusterIndices, const ArrayXXf& _data);
-
-			float m_resolution;
-			float m_errorThreshold;
-			float m_minShift, m_maxShift;
 
 		public:
 

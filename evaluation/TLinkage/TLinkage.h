@@ -85,7 +85,17 @@ namespace LD {
 
 			virtual void RejectOutliers(const ArrayXf& _clusters, const std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices, ArrayXf& _out, const int& _noiseIndex = -1);
 			
-			virtual void RefineModels(const vector<ArrayXf>& _models, const ArrayXXf& _data, const ArrayXf& _clusters, const std::unordered_map<int, ulli>& _clusterID2Index, const std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices, vector<ArrayXf>& _refinedModels, const int& _noiseIndex = -1) {}
+			virtual void FindParallelModels(const vector<ArrayXf>& _models, const ArrayXXf& _data, const ArrayXf& _clusters, const std::unordered_map<int, ulli>& _clusterID2Index, const std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices, vector<ArrayXf>& _refinedModels, ArrayXf& _refinedClusters, const int& _noiseIndex = -1);
+
+			virtual bool IsModelOnRight(const ArrayXf& _model) { return true; }
+
+			virtual void VisualizeModel(ArrayXf& _model, ArrayXXf& _coordinates) {}
+
+			virtual void ShiftModel(const ArrayXf& _originalModel, const vector<ulli>& _clusteredIndices, const ArrayXXf& _data, bool _isOriginalModelOnRight, ArrayXf& _shiftedModel);
+
+			virtual void ShiftModelBy(ArrayXf& _model, const float& _shiftBy) {}
+
+			virtual float EvaluateModel(const ArrayXf& _model, const vector<ulli>& _clusterIndices, const ArrayXXf& _data);
 
 			std::unique_ptr<Sampler> m_sampler;
 			std::unique_ptr<OutlierRejector> m_outlierRejector;
@@ -101,6 +111,10 @@ namespace LD {
 			string m_clusterFile;
 			std::ofstream m_foutModels;
 			std::ofstream m_foutClusters;
+			float m_errorThreshold;
+			float m_minShift, m_maxShift;
+			float m_shiftIncrement;
+
 	};
 }
 #endif

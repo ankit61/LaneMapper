@@ -29,8 +29,6 @@ namespace LD {
 	}
 
 	ArrayXf BSplineTLinkage::GenerateHypothesis(const vector<ArrayXf>& _samples) {
-		if(m_debug)
-			cout << "Entering BSplineTLinkage::GenerateHypothesis()" << endl;
 
 		alglib::spline1dinterpolant yOfX, zOfX;
 		alglib::real_2d_array yCoeffs, zCoeffs;
@@ -46,9 +44,6 @@ namespace LD {
 		spline1dunpack(zOfX, ctrlPts, zCoeffs); 
 
 		ArrayXf model = ConvertCoeffsTable2Model(yCoeffs, zCoeffs);
-
-		if(m_debug)
-			cout << "Exiting BSplineTLinkage::GenerateHypothesis()" << endl;
 
 		return model;
 		
@@ -110,6 +105,8 @@ namespace LD {
 	}
 
 	void BSplineTLinkage::CreateSplineInterpolants(ArrayXf _model, alglib::spline1dinterpolant& _yOfX, alglib::spline1dinterpolant& _zOfX) {
+		
+		//TODO: Using spline1dbuildhermite may improve performance
 		
 		alglib::real_1d_array x, y, z;
 		x.setlength(m_minSamples);
@@ -197,6 +194,16 @@ namespace LD {
 
 		if(m_debug)
 			cout << "Exiting BSplineTLinkage::VizualizeModels()" << endl;
+	}
+
+	bool BSplineTLinkage::IsModelOnRight(const ArrayXf& _model) {
+		return _model[3] > 0; //_models[3] = y value at minimum x
+	}
+
+	void BSplineTLinkage::ShiftModelBy(ArrayXf& _model, const float& _shiftBy) {
+		for(int i = 2; i < _model(0); i += m_params1dSpline) {
+			_model(1 + i) += _shiftBy;
+		}
 	}
 
 }

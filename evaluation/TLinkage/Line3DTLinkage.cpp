@@ -56,82 +56,8 @@ namespace LD {
 			cout << "Exiting Line3DTLinkage::FitModel()" << endl;
 	}
 
-
-	void Line3DTLinkage::RefineModels(const vector<ArrayXf>& _models, const ArrayXXf& _data, const ArrayXf& _clusters, const std::unordered_map<int, ulli>& _clusterID2Index,
-		const std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices, vector<ArrayXf>& _refinedModels, const int& _noiseIndex) {
-		if(m_debug)
-			cout << "Entering Line3DTLinkage::RefineModels()" << endl;
-	
-		//Find total number of clusters
-		if(_clusterID2PtIndices.size() > 2)
-			cout << "-----------------WARNING: Too many clusters: " << _clusterID2PtIndices.size() << "----------------------------" << endl;
-
-		//Find largest model
-
-		vector<std::pair<int, ulli> > count;
-		vector<ArrayXf> refModelsCopy; 
-		
-		for(auto it = _clusterID2PtIndices.begin(); it != _clusterID2PtIndices.end(); it++)
-			count.push_back(std::make_pair(it->first, it->second.size()));
-
-		int largestClusterID;
-		int largestSize = 0;
-		for(int i = 0; i < count.size(); i++)
-			if(count[i].second > largestSize && count[i].first != _noiseIndex)	
-				largestSize = count[i].second, largestClusterID = count[i].first;
-
-		
-		ArrayXf originalModel = _models[_clusterID2Index.find(largestClusterID)->second];
-		refModelsCopy.push_back(originalModel);
-
-		if(_clusterID2PtIndices.size() > 1) {
-			
-			//Find largest model on opposite side
-			bool isOriginalModelOnRight = IsModelOnRight(originalModel);
-			largestSize = 0;
-			for(int i = 0; i < count.size(); i++)
-				if(count[i].second > largestSize && IsModelOnRight(_models[_clusterID2Index.find(count[i].first)->second]) == !isOriginalModelOnRight && count[i].first != _noiseIndex)
-					largestSize = count[i].second, largestClusterID = count[i].first;
-			
-			if(largestSize > 0) {
-				ArrayXf shiftedModel;
-				ShiftModel(originalModel, _clusterID2PtIndices.find(largestClusterID)->second, _data, isOriginalModelOnRight, shiftedModel);
-				refModelsCopy.push_back(shiftedModel);
-			}
-			else 
-				cout << "-----------------WARNING: No cluster on the opposite side ----------------------------" << endl;
-		
-		}
-		else
-			cout << "-----------------WARNING: Only 1 cluster found ----------------------------" << endl;
-
-		_refinedModels = refModelsCopy;
-
-		if(m_debug)
-			cout << "Exiting Line3DTLinkage::RefineModels()" << endl;
-	}
-
-	void Line3DTLinkage::ShiftModel(ArrayXf& _originalModel, const vector<ulli>& _clusteredIndices, const ArrayXXf& _data, bool _isOriginalModelOnRight, ArrayXf& _shiftedModel) {
-		
-		_shiftedModel = _originalModel;
-		
-		//start shifting it to the right/left
-		_shiftedModel(1) += (_isOriginalModelOnRight ? -m_minShift : m_minShift);
-		float error = EvaluateModel(_shiftedModel, _clusteredIndices, _data);
-		float minError = error, minY = _shiftedModel(1);
-		while(std::abs(_shiftedModel(1) - _originalModel(1)) < m_maxShift) {
-			_shiftedModel(1) += (_isOriginalModelOnRight ? -m_resolution : m_resolution);
-			error = EvaluateModel(_shiftedModel, _clusteredIndices, _data);
-			if(error < minError) {
-				minError = error;
-				minY = _shiftedModel(1); 
-			}
-		}
-
-		_shiftedModel(1) = minY;
-		
-		if(minError > m_errorThreshold)
-			cout << "-----------------WARNING: Error too big " << minError << "----------------------------" << endl;
+	virtual void ShiftModelBy(ArrayXf& _model, const float& _shiftBy) {
+		_model(1) += _shiftBy;
 	}
 
 	bool Line3DTLinkage::IsModelOnRight(const ArrayXf& _model) {
@@ -149,10 +75,4 @@ namespace LD {
 		
 	}
 
-	float Line3DTLinkage::EvaluateModel(const ArrayXf& _model, const vector<ulli>& _clusterIndices, const ArrayXXf& _data) {
-		float distance = 0;
-		for(int i = 0; i < _clusterIndices.size(); i++)
-			distance += Distance(_data.col(_clusterIndices[i]), _model);
-		return distance / _clusterIndices.size();
-	}
 }

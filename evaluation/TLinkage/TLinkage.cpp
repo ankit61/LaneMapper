@@ -21,7 +21,6 @@
 #include"TukeyPreferenceFinder.h"
 
 namespace LD {
-
 	
 	TLinkage::TLinkage(int _minSamples, int _modelParams, string _xmlFile) : 
 		Solver(_xmlFile), m_minSamples(_minSamples), m_modelParams(_modelParams), m_sampler(std::make_unique<UniformSampler>(m_xmlFileName)), m_outlierRejector(std::make_unique<MaxDiffOR>(_minSamples, m_xmlFileName)) { 
@@ -45,9 +44,13 @@ namespace LD {
 		m_modelFile				  = solverInstanceNode.attribute("modelFile").as_string();
 		m_saveClusters 			  = solverInstanceNode.attribute("saveClusters").as_bool(true);
 		m_clusterFile 			  = solverInstanceNode.attribute("clusterFile").as_string();
+		m_minShift				  = solverInstanceNode.attribute("minShift").as_float();
+		m_maxShift				  = solverInstanceNode.attribute("maxShift").as_float();
+		m_errorThreshold		  = solverInstanceNode.attribute("errorThreshold").as_float();
+		m_shiftIncrement		  = solverInstanceNode.attribute("shiftIncrement").as_float();
 
-		if(sampler.empty() || preferenceFinder.empty() || outlierRejector.empty() || m_dataFile.empty() || !m_samplesPerDataPt || m_modelFile.empty() || (m_saveClusters && m_clusterFile.empty())) 
-			throw runtime_error("TLinkage SolverInstance node doesn't have one or more of the following attributes: sampler, preferenceFinder, outlierRejector, dataFile, samplesPerDataPt, modelFile, saveClusters, clusterFile");
+		if(sampler.empty() || preferenceFinder.empty() || outlierRejector.empty() || m_dataFile.empty() || !m_samplesPerDataPt || m_modelFile.empty() || (m_saveClusters && m_clusterFile.empty()) || !m_minShift || !m_maxShift || !m_errorThreshold || !m_shiftIncrement) 
+			throw runtime_error("TLinkage SolverInstance node doesn't have one or more of the following attributes: sampler, preferenceFinder, outlierRejector, dataFile, samplesPerDataPt, modelFile, saveClusters, clusterFile, minShift, maxShift, errorThreshold, shiftIncrement");
 			
 		//Set Sampler
 		if(boost::iequals(sampler, "Uniform"))
@@ -95,7 +98,8 @@ namespace LD {
 		Cluster(pref, _clusters, clusterID2PtIndices);
 		RejectOutliers(_clusters, clusterID2PtIndices, _clusters);
 		FitModels(_data, _clusters, _models, clusterID2Index);
-		RefineModels(_models, _data, _clusters, clusterID2Index, clusterID2PtIndices, _models);
+		//FIXME: add condition
+		FindParallelModels(_models, _data, _clusters, clusterID2Index, clusterID2PtIndices, _models, _clusters);
 
 		if(m_debug)
 			cout << "Exiting TLinkage::()" << endl;
@@ -378,4 +382,113 @@ namespace LD {
 		if(m_debug)
 			cout << "Exiting TLinkage::FitModels()" << endl;
 	}
+
+	void TLinkage::FindParallelModels(const vector<ArrayXf>& _models, const ArrayXXf& _data, const ArrayXf& _clusters, const std::unordered_map<int, ulli>& _clusterID2Index, const std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices, vector<ArrayXf>& _refinedModels, ArrayXf& _refinedClusters, const int& _noiseIndex) {
+
+		if(m_debug)
+			cout << "Entering TLinkage::FindParallelModels()" << endl;
+	
+		//Find total number of clusters
+		if(_clusterID2PtIndices.size() > 2)
+			cout << "-----------------WARNING: Too many clusters: " << _clusterID2PtIndices.size() << "----------------------------" << endl;
+
+		//Find largest model
+
+		vector<std::pair<int, ulli> > count;
+		vector<ArrayXf> refModelsCopy; //this is necessary if _models == _refinedModels
+		
+		for(auto it = _clusterID2PtIndices.begin(); it != _clusterID2PtIndices.end(); it++)
+			count.push_back(std::make_pair(it->first, it->second.size()));
+
+		int largestClusterID;
+		int largestSize = 0;
+		for(int i = 0; i < count.size(); i++)
+			if(count[i].second > largestSize && count[i].first != _noiseIndex)	
+				largestSize = count[i].second, largestClusterID = count[i].first;
+
+		ArrayXf originalModel = _models[_clusterID2Index.find(largestClusterID)->second];
+		refModelsCopy.push_back(originalModel);
+		int largestClusterIDOpp;
+
+		if(_clusterID2PtIndices.size() > 1) {
+			
+			//Find largest model on opposite side
+			bool isOriginalModelOnRight = IsModelOnRight(originalModel);
+			largestSize = 0;
+			
+			for(int i = 0; i < count.size(); i++)
+				if(count[i].second > largestSize && 
+				  IsModelOnRight(_models[_clusterID2Index.find(count[i].first)->second]) != isOriginalModelOnRight && 
+				  count[i].first != _noiseIndex)
+					largestSize = count[i].second, largestClusterIDOpp = count[i].first;
+			
+			if(largestSize > 0) {
+				ArrayXf shiftedModel;
+				ShiftModel(originalModel, _clusterID2PtIndices.find(largestClusterIDOpp)->second, _data, isOriginalModelOnRight, shiftedModel);
+				refModelsCopy.push_back(shiftedModel);
+			}
+			else 
+				cout << "-----------------WARNING: No cluster on the opposite side ----------------------------" << endl;
+		
+		}
+		else
+			cout << "-----------------WARNING: Only 1 cluster found ----------------------------" << endl;
+
+		_refinedModels = refModelsCopy;
+		_refinedClusters = _clusters;
+		
+		for(int i = 0; i < _refinedClusters.size(); i++) {
+			if(_refinedClusters(i) != largestClusterID && _refinedClusters(i) != largestClusterIDOpp)
+				_refinedClusters(i) = _noiseIndex;
+		}
+
+		if(m_debug)
+			cout << "Exiting TLinkage::FindParallelModels()" << endl;
+
+	}
+
+	void TLinkage::ShiftModel(const ArrayXf& _originalModel, const vector<ulli>& _clusteredIndices, const ArrayXXf& _data, bool _isOriginalModelOnRight, ArrayXf& _shiftedModel) {
+		
+		if(m_debug)
+			cout << "Entering TLinkage::Shiftmodel()" << endl;
+		
+		ArrayXf shiftedModelCopy = _originalModel;
+		
+		//start shifting it to the right/left
+		
+		float minShift = (_isOriginalModelOnRight ? -m_minShift : m_minShift);
+		ShiftModelBy(shiftedModelCopy, minShift);
+		float error = EvaluateModel(shiftedModelCopy, _clusteredIndices, _data);
+		float minError = error;
+		float shiftBy = _isOriginalModelOnRight ? -m_shiftIncrement : m_shiftIncrement;
+		float totalShift = minShift;
+		while(std::abs(totalShift) < m_maxShift) {
+			ShiftModelBy(shiftedModelCopy, shiftBy);
+
+			totalShift += shiftBy;
+			error = EvaluateModel(shiftedModelCopy, _clusteredIndices, _data);
+			if(error < minError) {
+				minError = error;
+				minShift = totalShift;
+			}
+		}
+
+		_shiftedModel = _originalModel;
+		ShiftModelBy(_shiftedModel, minShift);
+		
+		if(minError > m_errorThreshold)
+			cout << "-----------------WARNING: Error too big " << minError << "----------------------------" << endl;
+
+		if(m_debug)
+			cout << "Exiting TLinkage::Shiftmodel()" << endl;
+
+	}
+
+	float TLinkage::EvaluateModel(const ArrayXf& _model, const vector<ulli>& _clusterIndices, const ArrayXXf& _data) {
+		float distance = 0;
+		for(int i = 0; i < _clusterIndices.size(); i++)
+			distance += Distance(_data.col(_clusterIndices[i]), _model);
+		return distance / _clusterIndices.size();
+	}
+
 }
