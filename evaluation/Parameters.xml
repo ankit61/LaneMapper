@@ -58,7 +58,7 @@
 			 printOnly2D	   = true if only x and y coordinates (lidar space) must be printed in file
 			 -->
 
-			<ResultIntersector segRoot="/media/sf_Autonomous_Driving/HistEqualized/Segmented/" maxWidth="3" maxLength="20" refinedRoot ="/media/sf_Autonomous_Driving/ExtractedLanes" refImgPrefix="refined_" segImgPrefix="segmented_" outputFile="lidarRoadThresholded.txt" saveVizImg="true" vizImgPrefix="lidar_" printOnly2D="false"/>
+			<ResultIntersector segRoot="/media/sf_Autonomous_Driving/HistEqualized/Segmented/" maxWidth="3" maxLength="20" refinedRoot ="/media/sf_Autonomous_Driving/ExtractedLanes" refImgPrefix="refined_" segImgPrefix="segmented_" outputFile="intersected3DPts.txt" saveVizImg="true" vizImgPrefix="lidar_" printOnly2D="false"/>
 
 			<!-- segRoot 	   = directory where segmented images are stored
 			 segImgPrefix	   = prefix before all segmented images
@@ -84,7 +84,7 @@
 
 			<LaneQualityChecker />
 			
-			<SolverInstance dataRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data" dataFile="images.txt"  veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" calibRoot="/media/sf_Autonomous_Driving/calib" outputRoot="/media/sf_Autonomous_Driving/LidarImages/" retentionFrequency="5" camNum="2" minX="5"/>
+			<SolverInstance dataRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data" dataFile="images.txt"  veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" calibRoot="/media/sf_Autonomous_Driving/calib" outputRoot="/media/sf_Autonomous_Driving/Lidar/" retentionFrequency="3" camNum="2" minX="5"/>
 		</VeloProjector>
 		
 		<TLinkage>
@@ -96,7 +96,7 @@
 				 					AbsVerticalDegree if the angle with respect to y axis is measured between points
 									Euclidean if simple geometric distance is supposed to be measured-->
 
-				<DistBased sigma="3" maxDiff="60" measurementWay="AbsVerticalDegree"/>
+				<DistBased sigma="3" maxDiff="60" measurementWay="AbsVerticalDegree" shouldXUnique="true"/>
 			</Samplers>
 
 			<Models>
@@ -110,12 +110,12 @@
 				 resolution = distance by which each increment happens
 				 errorThreshold = the maximum average least square distance from all points in a cluster to the parallel line constructed
 			-->
-				<Line3D minShift="2.7" maxShift="6" resolution="0.025" errorThreshold="1"/>
+				<Line3D />
 				<BSpline minSamples="8" regularizationConst="2" resolution="0.25"  minX="5" maxX="80"/>
 			</Models>
 
 			<!-- inlierThreshold = maximum distance between a model and a sample that fits the model-->
-			<PreferenceFinders inlierThreshold="1">
+			<PreferenceFinders inlierThreshold="0.5">
 				<Exp divFactor="5"/>
 				<Hard/>
 				<Gauss divFactor="4"/>
@@ -138,7 +138,7 @@
 				 samplesPerDataPt = total samples generated would samplesPerDataPt * data points
 			-->
 
-			<SolverInstance dataFile="/media/sf_Autonomous_Driving/Lidar/intersected3DPts.txt" shouldTranspose="true"  modelFile="/media/sf_Autonomous_Driving/Line3DModels.txt" saveClusters="true" clusterFile="/media/sf_Autonomous_Driving/Line3DClusters.txt" preferenceFinder="Exp" sampler="PreferNear" outlierRejector="KLargest" samplesPerDataPt="5"/>
+			<SolverInstance dataFile="/media/sf_Autonomous_Driving/Lidar/intersected3DPts.txt" shouldTranspose="true"  modelFile="/media/sf_Autonomous_Driving/SplineModels.txt" saveClusters="true" clusterFile="/media/sf_Autonomous_Driving/SplineClusters.txt" preferenceFinder="Exp" sampler="PreferNear" outlierRejector="None" samplesPerDataPt="5" minShift="2.7" maxShift="10" shiftIncrement="0.025" errorThreshold="1"/>
 
 		</TLinkage>
 
@@ -164,6 +164,6 @@
 
 	</Solvers>
 
-	<Main solver="LaneExtractor" debug="true"/>
+	<Main solver="BSplineTLinkage" debug="true"/>
 
 </Document>
