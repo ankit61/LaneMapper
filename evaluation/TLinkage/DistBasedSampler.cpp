@@ -5,8 +5,9 @@ namespace LD {
 
 	void DistBasedSampler::ParseXML() {
 		m_xml = m_xml.child("DistBased");
-		m_sigma = m_xml.attribute("sigma").as_float();
-		m_maxDiff = m_xml.attribute("maxDiff").as_float();
+		m_sigma 			= m_xml.attribute("sigma").as_float();
+		m_maxDiff 			= m_xml.attribute("maxDiff").as_float();
+		m_shouldXUnique 	= m_xml.attribute("shouldXUnique").as_bool(true);
 
 		string measurementWay = m_xml.attribute("measurementWay").as_string();
 
@@ -35,16 +36,24 @@ namespace LD {
 
 		FindCDF(_data, cdfs);
 		for(ulli i = 0; i < _numSamples; i++) {
+
 			_sampleIndices(0, i) = i % _data.cols();
 			std::unordered_set<ulli> uniques;
+			std::unordered_set<float> xs;
 			uniques.insert(_sampleIndices(0, i));
+			
 			ulli iterations = 0;
 			int tries = 0;
+
 			while(uniques.size() != _minSamples) { //TODO: should be able to ensure 0 repetitions
 				auto it = std::upper_bound(cdfs.col(_sampleIndices(0, i)).data(), cdfs.col(_sampleIndices(0, i)).data() + cdfs.rows(), (double) rand() / RAND_MAX);
 				_sampleIndices(uniques.size(), i) = std::distance(cdfs.col(_sampleIndices(0, i)).data(), it);
-				if(_sampleIndices(uniques.size(), i) != _data.cols())
+				float x = _data(0, _sampleIndices(uniques.size(), i));
+				if(_sampleIndices(uniques.size(), i) != _data.cols() && 
+				  (m_shouldXUnique && xs.find(x) == xs.end())) {
 					uniques.insert(_sampleIndices(uniques.size(), i));
+					xs.insert(x);
+				}
 				if(++iterations > m_maxIterationsFactor * _minSamples) {
 					(tries < m_maxTries) ? tries++ : throw MinSamplesNotFound();
 					_sampleIndices(0, i) = rand() % _data.cols();
@@ -53,6 +62,7 @@ namespace LD {
 					iterations = 0;
 				}
 			}
+
 		}
 
 		if(m_debug)

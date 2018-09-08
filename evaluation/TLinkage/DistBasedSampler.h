@@ -27,6 +27,7 @@ namespace LD {
 			double Distance(const ArrayXf& pt1, const ArrayXf& pt2);
 
 			double m_sigma, m_maxDiff;
+			bool m_shouldXUnique;
 			MeasurementWays m_measureBy;
 			
 	};
