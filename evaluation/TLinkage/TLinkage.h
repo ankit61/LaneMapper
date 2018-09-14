@@ -81,7 +81,7 @@ namespace LD {
 
 			virtual void FindPreferences(const ArrayXXf& _residuals, ArrayXXf& _preferences);
 
-			virtual void Cluster(ArrayXXf& _preferences, ArrayXf& _clusters, std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices);
+			virtual void Cluster(ArrayXXf& _preferences, ArrayXf& _clusters, std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices, const int& _noiseIndex = -1);
 
 			virtual void RejectOutliers(const ArrayXf& _clusters, const std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices, ArrayXf& _out, const int& _noiseIndex = -1);
 			

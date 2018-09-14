@@ -96,7 +96,8 @@ namespace LD {
 		FindResiduals(_data, hypotheses, residuals);
 		FindPreferences(residuals, pref);
 		Cluster(pref, _clusters, clusterID2PtIndices);
-		RejectOutliers(_clusters, clusterID2PtIndices, _clusters);
+		//	Don't use RejectOutliers with FindParallelModels
+		//	RejectOutliers(_clusters, clusterID2PtIndices, _clusters);
 		FitModels(_data, _clusters, _models, clusterID2Index);
 		//FIXME: add condition
 		FindParallelModels(_models, _data, _clusters, clusterID2Index, clusterID2PtIndices, _models, _clusters);
@@ -259,7 +260,7 @@ namespace LD {
 		
 		for(ulli c = 0; c < _sampleIndices.cols(); c++) {
 			for(ulli r = 0; r < _sampleIndices.rows(); r++)
-				samples[r] = _data.col(_sampleIndices(r, c));
+				samples[r] = _data.col(_sampleIndices(r, c)); //FIXME: Deep Copy
 			_hypotheses.col(c) = GenerateHypothesis(samples);
 			
 		}
@@ -269,7 +270,7 @@ namespace LD {
 
 	}
 
-	void TLinkage::Cluster(ArrayXXf& _preferences, ArrayXf& _clusters, std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices) {
+	void TLinkage::Cluster(ArrayXXf& _preferences, ArrayXf& _clusters, std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices, const int& _noiseIndex) {
 		if(m_debug)
 			cout << "Entering TLinkage::Cluster()" << endl;
 
@@ -305,9 +306,22 @@ namespace LD {
 			minDist = distances.minCoeff(&pt1, &pt2);
 		}
 
-		for(ulli i = 0; i < _clusters.size(); i++) { //copy union find vector to Eigen::Array
-			_clusters(i) = uf.findSet(i);
-			_clusterID2PtIndices[_clusters(i)].push_back(i);
+		for(ulli i = 0; i < _clusters.size(); i++) 
+			_clusterID2PtIndices[uf.findSet(i)].push_back(i);
+
+		//Remove small, useless clusters
+
+		for(auto it = _clusterID2PtIndices.begin(); it != _clusterID2PtIndices.end();) {
+			if(it->second.size() > m_minSamples) {
+				for(auto& index : it->second)
+					_clusters(index) = it->first;
+				it++;
+			}
+			else {
+				for(auto& index : it->second)
+					_clusters(index) = _noiseIndex;
+				it = _clusterID2PtIndices.erase(it);
+			}
 		}
 
 		if(m_debug)
@@ -372,11 +386,11 @@ namespace LD {
 			cout << "Clubbed points of the same cluster" << endl;
 
 		vector<ArrayXXf> clusters(clusteredPoints.size());
-		_models.resize(clusteredPoints.size());
 
 		for(ulli i = 0; i < clusters.size(); i++) {
 			clusters[i] = Map<Matrix<float, Dynamic, Dynamic, RowMajor>, Unaligned, OuterStride<> >(clusteredPoints[i].data(), clusteredPoints[i].size() / _data.rows(), _data.rows(), OuterStride<>(_data.rows())).array(); //this is a deep copy
-			FitModel(clusters[i], _models[i]);
+			_models.push_back(ArrayXf());
+			FitModel(clusters[i], _models.back());
 		}
 
 		if(m_debug)
@@ -389,7 +403,7 @@ namespace LD {
 			cout << "Entering TLinkage::FindParallelModels()" << endl;
 	
 		//Find total number of clusters
-		if(_clusterID2PtIndices.size() > 2)
+		if(_models.size() > 2)
 			cout << "-----------------WARNING: Too many clusters: " << _clusterID2PtIndices.size() << "----------------------------" << endl;
 
 		//Find largest model
@@ -410,7 +424,7 @@ namespace LD {
 		refModelsCopy.push_back(originalModel);
 		int largestClusterIDOpp;
 
-		if(_clusterID2PtIndices.size() > 1) {
+		if(_models.size() > 1) {
 			
 			//Find largest model on opposite side
 			bool isOriginalModelOnRight = IsModelOnRight(originalModel);
