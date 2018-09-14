@@ -1,5 +1,5 @@
-#ifndef MODEL_VISUALIZER_H_
-#define MODEL_VISUALIZER_H_
+#ifndef POINTS_VISUALIZER_H_
+#define POINTS_VISUALIZER_H_
 
 #include"VeloProjector.h"
 

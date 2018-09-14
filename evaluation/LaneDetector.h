@@ -27,7 +27,8 @@ namespace LD {
 		
 		protected:
 			Segmenter m_segmenter;
-			LaneExtractor m_refiner;
+			//LaneExtractor m_refiner;
+			KPercentExtractor m_refiner;
 			ResultIntersector m_resultIntersector;
 			BSplineTLinkage m_bSplineTLinkage;
 			LaneQualityChecker m_laneQualityChecker;
