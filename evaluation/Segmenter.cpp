@@ -57,7 +57,7 @@ namespace LD {
 		Segment(_segImg);
 		PostProcess(_segImg, _segImg);
 		
-		if(m_debug)
+		if(m_debug)	
 			cout << "Exiting Segmenter::()" << endl;
 	}
 
@@ -79,8 +79,6 @@ namespace LD {
 				cout << "Successfully opened " << line << endl;
 		
 			this->operator()(inputImg, segImg);
-			cv::imshow("s", segImg);
-			cv::waitKey(0);
 			Save(inputImg, segImg);
 		}
 		
@@ -200,7 +198,7 @@ namespace LD {
 			cout << "Exiting Segmenter::PostProcess()" << endl;
 	}
 
-	void Segmenter::Save(cv::Mat& _inputImg, cv::Mat& _segImg) {
+	void Segmenter::Save(const cv::Mat& _inputImg, const cv::Mat& _segImg) {
 		// saves segmented and overlayed images at desired locations
 		
 		//create Segmentation
@@ -220,20 +218,9 @@ namespace LD {
 
 		if(m_saveVizImg) {
 
-			//create overlay
 			cv::Mat overlayed;
+			CreateOverlay(_inputImg, _segImg, overlayed);
 			string overlayedImgName = m_vizImgPrefix + m_imgBaseName;
-
-			vector<cv::Mat> channels;
-			cv::Mat black = cv::Mat::zeros(_segImg.rows, _segImg.cols, CV_8UC1);
-			channels.push_back(black);
-			channels.push_back(black);
-			_segImg.convertTo(_segImg, CV_8UC1);
-			channels.push_back(_segImg);
-			cv::merge(channels, _segImg);
-
-			cv::addWeighted(_segImg, 0.5, _inputImg, 0.5, 0.0, overlayed);
-		
 			imwrite(m_overlayedRoot + "/" +  overlayedImgName, overlayed);
 			
 			if(m_debug) {
@@ -241,5 +228,26 @@ namespace LD {
 				cout << "Exiting Segmenter::Save()" << endl;
 			}
 		}
+	}
+
+	void Segmenter::CreateOverlay(const cv::Mat& _inputImg, const cv::Mat& _segImg, cv::Mat& _overlayed) {
+		if(m_debug)
+			cout << "Entering Segmenter::CreateOverlay()" << endl;
+
+		vector<cv::Mat> channels;
+		cv::Mat black = cv::Mat::zeros(_segImg.rows, _segImg.cols, CV_8UC1);
+		
+		channels.push_back(black);
+		channels.push_back(black);
+		cv::Mat segImg3C;
+		_segImg.convertTo(segImg3C, CV_8UC1);
+		channels.push_back(segImg3C);
+		
+		cv::merge(channels, segImg3C);
+		cv::addWeighted(segImg3C, 0.5, _inputImg, 0.5, 0.0, _overlayed);
+		
+		if(m_debug)
+			cout << "Exiting Segmenter::CreateOverlay()" << endl;
+
 	}
 }

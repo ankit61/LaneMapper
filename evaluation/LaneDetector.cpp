@@ -15,18 +15,19 @@ namespace LD {
 			
 		m_xml = m_xml.child("LaneDetector");
 		
-		m_imgRoot    	  = m_xml.attribute("imgRoot").as_string();
-		m_imgFile 	 	  = m_xml.attribute("imgFile").as_string();
-		m_veloRoot	 	  = m_xml.attribute("veloRoot").as_string();
-		m_ratiosFile 	  = m_xml.attribute("ratiosFile").as_string();
-		m_saveVizImg	  = m_xml.attribute("saveVizImg").as_bool(true);
-		m_vizImgPrefix	  = m_xml.attribute("vizImgPrefix").as_string();
+		m_imgRoot    	  		= m_xml.attribute("imgRoot").as_string();
+		m_imgFile 	 	  		= m_xml.attribute("imgFile").as_string();
+		m_veloRoot	 	  		= m_xml.attribute("veloRoot").as_string();
+		m_ratiosFile 	  		= m_xml.attribute("ratiosFile").as_string();
+		m_saveVizImg	  		= m_xml.attribute("saveVizImg").as_bool(true);
+		m_vizImgPrefix	  		= m_xml.attribute("vizImgPrefix").as_string();
+		m_overlayedICNetPrefix 	= m_xml.attribute("overlayedICNetPrefix").as_string();
 
-		if(m_imgRoot.empty() || m_imgRoot.empty() || m_veloRoot.empty() || m_ratiosFile.empty() || (m_saveVizImg && m_vizImgPrefix.empty()))
+		if(m_imgRoot.empty() || m_imgRoot.empty() || m_veloRoot.empty() || m_ratiosFile.empty() || (m_saveVizImg && m_vizImgPrefix.empty()) || m_overlayedICNetPrefix.empty())
 			throw runtime_error("at least one of the following attributes is missing: imgRoot, imgFile, veloRoot, ratiosFile, vizImgPrefix, saveVizImg");	
 
 		if(m_debug)
-			cout << "Entering LaneDetector::ParseXML()" << endl;
+			cout << "Exiting LaneDetector::ParseXML()" << endl;
 	}
 	
 	void LaneDetector::operator()(const cv::Mat& _inputImg, cv::Mat& _veloPoints, vector<Eigen::ArrayXf>& _models, float& _brightnessRatio, float& _reflectivityRatio) {
@@ -39,6 +40,15 @@ namespace LD {
 		Mat reflectivity;
 		Eigen::MatrixXf veloImg;
 		m_segmenter(_inputImg, segImg);
+
+		if(m_debug) {
+			
+			cv::Mat overlayed;
+			m_segmenter.CreateOverlay(_inputImg, segImg, overlayed);
+			cv::imwrite(m_overlayedICNetPrefix + m_imgBaseName, overlayed);
+			
+		}
+
 		m_refiner(_inputImg, segImg, refinedImg);
 		m_resultIntersector(_veloPoints, segImg, refinedImg, intersectedPts, reflectivity, veloImg);
 		m_bSplineTLinkage(intersectedPts, clusters, _models);

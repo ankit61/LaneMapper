@@ -2,7 +2,7 @@
  * \brief C++ implementation of evaluation scripts of ICNet
  * \author Ankit Ramchandani
  * \date  06-06-2018
-*/
+ */
 
 #ifndef SEGMENTER_H_
 #define SEGMENTER_H_
@@ -113,7 +113,7 @@ namespace LD {
 			 * \param _inputImg input image as given by user
 			 * \param _segImg as outputted by Segmenter::PostProcess()
 			 */
-			void Save(cv::Mat& _inputImg, cv::Mat& _segmentedImg);
+			void Save(const cv::Mat& _inputImg, const cv::Mat& _segmentedImg);
 
 			/**
 			 * \brief makes elements of m_inputChannels point to input layer of network 
@@ -121,7 +121,7 @@ namespace LD {
 			void WrapInputLayer();
 
 			virtual void ParseXML() override;
-
+			
 		public:
 			/**
 			 * \brief initializes relevant member variables
@@ -139,6 +139,9 @@ namespace LD {
 			 *        and returns a b/w image where road pixels are white
 		 	 */
 			virtual void operator()(const cv::Mat& _inputImg, cv::Mat& _segImg);
+			
+			
+			void CreateOverlay(const cv::Mat& _inputImg, const cv::Mat& _segImg, cv::Mat& _overlayed);
 
 	};
 

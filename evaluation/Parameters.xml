@@ -12,7 +12,7 @@
 			 segImgPrefix  = prefix put before the name of segmented image
 			 overlayedRoot = directory where overlaid images would be stored -->
 
-			<SolverInstance dataRoot = "/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data" dataFile="images.txt" segRoot="/media/sf_Autonomous_Driving/HistEqualized/Segmented/" saveVizImg="true" vizImgPrefix="overlayed_" segImgPrefix="segmented_" overlayedRoot="/media/sf_Autonomous_Driving/HistEqualized/Overlayed/"/>
+			<SolverInstance dataRoot = "/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data" dataFile="images.txt" segRoot="/media/sf_Autonomous_Driving/HistEqualized/Segmented/" saveVizImg="true" vizImgPrefix="overlayed_" segImgPrefix="segmented_" overlayedRoot="/media/sf_Autonomous_Driving/Results/2011_09_26_0005"/>
 		</Segmenter>
 
 		<Refiner>
@@ -84,7 +84,7 @@
 
 			<LaneQualityChecker />
 			
-			<SolverInstance dataRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data" dataFile="images.txt"  veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" calibRoot="/media/sf_Autonomous_Driving/calib" outputRoot="/media/sf_Autonomous_Driving/Lidar/" retentionFrequency="3" camNum="2" minX="5"/>
+				<SolverInstance dataRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data" dataFile="images.txt"  veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" calibRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0005_sync" outputRoot="/media/sf_Autonomous_Driving/Lidar/" retentionFrequency="1" camNum="2" minX="5"/>
 		</VeloProjector>
 		
 		<TLinkage>
@@ -160,10 +160,20 @@
 			 veloRoot = directory which stores all bin files containing Lidar points
 		 -->
 		
-		<LaneDetector imgRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data/" imgFile="images.txt" veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" ratiosFile="test.txt" saveVizImg="true" vizImgPrefix="/media/sf_Autonomous_Driving/CPPSplines/spline_"/>
+		<LaneDetector 
+			imgRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0005_sync/image_02/data/" 
+			imgFile="/media/sf_Autonomous_Driving/Results/2011_09_26_0005/images.txt" 
+			veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0005_sync/velodyne_points/data" 
+			ratiosFile="/media/sf_Autonomous_Driving/Results/2011_09_26_0005/KP_ratios.txt" 
+			saveVizImg="true" 
+			vizImgPrefix="/media/sf_Autonomous_Driving/Results/2011_09_26_0005/kp_"
+			overlayedICNetPrefix="/media/sf_Autonomous_Driving/Results/2011_09_26_0005/overlayed_"
+			
+		/>
 
 	</Solvers>
 
-	<Main solver="BSplineTLinkage" debug="true"/>
+	<Main solver="LaneDetector" debug="true"/>
 
 </Document>
+
