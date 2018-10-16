@@ -1,4 +1,8 @@
-	<Document>
+<!--<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE dirs [
+	<!ENTITY >
+]> -->
+<Document>
 
 	<Solvers>
 		
@@ -70,6 +74,10 @@
 			 -->
 
 			<SurfaceDataMaker segRoot="/media/sf_Autonomous_Driving/HistEqualized/Segmented/" segImgPrefix="segmented_" outputFilePrefix="lidarRoad2DPts_" saveVizImg="false" vizImgPrefix="lidarRoad_" minPoints="15" printProjectedPts="true"/>
+			
+			<!-- <LidarImageProjector saveVizImg="true" vizImgPrefix="avg_" maxDist="5"/> -->
+
+			<LaneQualityChecker />
 
 			<!-- dataRoot 	   = directory from which relative paths to images are given in dataFile 
 			 dataFile 	       = file listing relative paths of images to test
@@ -80,11 +88,7 @@
 			 camNum 	       = the camera number used (0,1,2,3)
 			 minX			   = the minimum x coordinate a Lidar point must have to be considered to lie on the image -->
 			
-			<LidarImageProjector saveVizImg="true" vizImgPrefix="avg_" maxDist="5"/>
-
-			<LaneQualityChecker />
-			
-				<SolverInstance dataRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data" dataFile="images.txt"  veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" calibRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0005_sync" outputRoot="/media/sf_Autonomous_Driving/Lidar/" retentionFrequency="1" camNum="2" minX="5"/>
+			<SolverInstance dataRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/image_02/data" dataFile="images.txt"  veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0056_sync/velodyne_points/data" calibRoot="/home/ankit/Research/Autonomous-Driving-Research/2011_09_26_drive_0056_sync/calib" outputRoot="/media/sf_Autonomous_Driving/Lidar/" retentionFrequency="1" camNum="2" minX="5"/>
 		</VeloProjector>
 		
 		<TLinkage>
@@ -94,7 +98,8 @@
 				 maxDiff 	       = maximum difference to tolerate while sampling (in m or degrees)
 				 measurementWay    = way to measure "distance" 
 				 					AbsVerticalDegree if the angle with respect to y axis is measured between points
-									Euclidean if simple geometric distance is supposed to be measured-->
+									Euclidean if simple geometric distance is supposed to be measured
+				 shouldXUnique	   = true if x coordinates of all points in a sample should be unique (should be true when using the spline model) -->
 
 				<DistBased sigma="3" maxDiff="60" measurementWay="AbsVerticalDegree" shouldXUnique="true"/>
 			</Samplers>
@@ -105,12 +110,14 @@
 				<Circle2D/>
 				<Surface/>
 				<Road/>
-			<!-- minShift = minimum distance to push a line by when finding parallel line on other side
-			  	 maxShift = maximum distance to push a line by when finding parallel line on other side
-				 resolution = distance by which each increment happens
-				 errorThreshold = the maximum average least square distance from all points in a cluster to the parallel line constructed
-			-->
 				<Line3D />
+				<!--
+					minSamples				= number of points to sample to fit a spline on (should be more than or equal to 6)
+					minX					= min x distance to be considered in meters
+					maxX					= max x distance to be considered in meters
+					regularizationConst		= the higher this number the straighter the fitted spline would be
+					resolution				= precision to which distance from a point to spline is calculated (higher the number the, the less accurate the estimate, the faster the speed)
+				-->
 				<BSpline minSamples="8" regularizationConst="2" resolution="0.25"  minX="5" maxX="80"/>
 			</Models>
 
@@ -124,18 +131,23 @@
 
 			<OutlierRejectors>
 				<MaxSizeChange/>
+				<!-- k = maximum number of clusters to keep-->
 				<KLargest k="2"/>
 			</OutlierRejectors>
 
 			<!-- dataFile = file that lists all points
-				 shouldTranspose = true if colums in dataFile = number of dimensions of points
-				 modelFile = file which would store all model parameters
-				 saveClusters = true if clusters should be saved
-				 clusterFile  = file which would store all clusters 
-				 preferenceFinder = name of preference finder (any child of PreferenceFinders node) 
-				 sampler = name of sampler to use (any child of Samplers node (for DistBased, use PreferNear as its name)
-				 outlierRejector = name of outlier rejector (None or any child of OutlierRejectors node)
-				 samplesPerDataPt = total samples generated would samplesPerDataPt * data points
+				 shouldTranspose		= true if colums in dataFile = number of dimensions of points
+				 modelFile				= file which would store all model parameters
+				 saveClusters			= true if clusters should be saved
+				 clusterFile			= file which would store all clusters 
+				 preferenceFinder		= name of preference finder (any child of PreferenceFinders node) 
+				 sampler				= name of sampler to use (any child of Samplers node (for DistBased, use PreferNear as its name)
+				 outlierRejector		= name of outlier rejector (None or any child of OutlierRejectors node)
+				 samplesPerDataPt		= total samples generated would samplesPerDataPt * data points
+				 minShift				= minimum distance to push a line by when finding parallel line on other side
+			  	 maxShift				= maximum distance to push a line by when finding parallel line on other side
+				 resolution				= distance by which each increment happens
+				 errorThreshold			= the maximum average least square distance from all points in a cluster to the parallel line constructed
 			-->
 
 			<SolverInstance dataFile="/media/sf_Autonomous_Driving/Lidar/intersected3DPts.txt" shouldTranspose="true"  modelFile="/media/sf_Autonomous_Driving/SplineModels.txt" saveClusters="true" clusterFile="/media/sf_Autonomous_Driving/SplineClusters.txt" preferenceFinder="Exp" sampler="PreferNear" outlierRejector="None" samplesPerDataPt="5" minShift="2.7" maxShift="10" shiftIncrement="0.025" errorThreshold="1"/>
@@ -158,16 +170,21 @@
 		<!-- imgRoot = directory from which relative paths are listed in imgFile
 			 imgFile = file that stores all relative paths to images
 			 veloRoot = directory which stores all bin files containing Lidar points
+			 ratiosFile = output file storing the ratios of mean brightness of lane marks to mean brightness of road and mean reflectivity of lane marks to mean reflectivity of road
+			 saveVizImg = if visualization image should be stored
+			 vizImgPrefix = prefix prepended to the name of visualization image
+			 overlayedICNetPrefix = prefix prepended to the name of the overlayed image generated by ICNet
+			 
 		 -->
 		
 		<LaneDetector 
-			imgRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0005_sync/image_02/data/" 
-			imgFile="/media/sf_Autonomous_Driving/Results/2011_09_26_0005/images.txt" 
-			veloRoot="/media/sf_Autonomous_Driving/data_road/2011_09_26_drive_0005_sync/velodyne_points/data" 
-			ratiosFile="/media/sf_Autonomous_Driving/Results/2011_09_26_0005/KP_ratios.txt" 
+			imgRoot="/home/ankit/Research/Autonomous-Driving-Research/2011_09_26_drive_0056_sync/image_02/data/" 
+			imgFile="/home/ankit/Research/Autonomous-Driving-Research/2011_09_26_drive_0056_sync/Results/images.txt" 
+			veloRoot="/home/ankit/Research/Autonomous-Driving-Research/2011_09_26_drive_0056_sync/velodyne_points/data" 
+			ratiosFile="/home/ankit/Research/Autonomous-Driving-Research/2011_09_26_drive_0056_sync/Results/KP_ratios.txt" 
 			saveVizImg="true" 
-			vizImgPrefix="/media/sf_Autonomous_Driving/Results/2011_09_26_0005/kp_"
-			overlayedICNetPrefix="/media/sf_Autonomous_Driving/Results/2011_09_26_0005/overlayed_"
+			vizImgPrefix="/home/ankit/Research/Autonomous-Driving-Research/2011_09_26_drive_0056_sync/Results/kp_"
+			overlayedICNetPrefix="/home/ankit/Research/Autonomous-Driving-Research/2011_09_26_drive_0056_sync/Results/overlayed_"
 			
 		/>
 
@@ -176,4 +193,3 @@
 	<Main solver="LaneDetector" debug="true"/>
 
 </Document>
-
