@@ -143,6 +143,8 @@ namespace LD {
 			
 			void CreateOverlay(const cv::Mat& _inputImg, const cv::Mat& _segImg, cv::Mat& _overlayed);
 
+			void SaveOverlaidImg(const cv::Mat& _inputImg, const cv::Mat& _segImg, string _baseName);
+
 	};
 
 }

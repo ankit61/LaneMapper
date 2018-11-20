@@ -36,6 +36,8 @@ int main(int argc, char* argv[]) {
 	if(argc != 2)
 		throw runtime_error("xml file name expected as first argument");
 
+	std::ios_base::sync_with_stdio(false); //No C style print or read is being used
+	
 	pugi::xml_document xml;
 	pugi::xml_parse_result status = xml.load_file(argv[1]);
 	if(!status)

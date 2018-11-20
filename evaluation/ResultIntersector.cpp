@@ -49,11 +49,15 @@ namespace LD {
 		PrintToFile(intersectedPts);
 
 		if(m_saveVizImg)
-			imwrite(m_outputRoot + "/" + m_vizImgPrefix + m_imgBaseName, _inputImg);
+			SaveVizImg(_inputImg, m_imgBaseName);
 
 		if(m_debug)
 			cout << "Exiting ResultIntersector::ProcessProjectedLidarPts()" << endl;
 
+	}
+
+	void ResultIntersector::SaveVizImg(const Mat& _vizImg, string _imgBaseName) {
+		imwrite(m_outputRoot + "/" + m_vizImgPrefix + _imgBaseName, _vizImg);
 	}
 
 	void ResultIntersector::operator()(Mat& _veloPoints, const Mat& _segImg, const Mat& _refinedImg, Eigen::ArrayXXf& _intersectedPts, Mat& _reflectivity, Eigen::MatrixXf& _veloImgPts) {
@@ -63,6 +67,18 @@ namespace LD {
 		Project(_veloPoints, _veloImgPts, _reflectivity);
 		double thresh = OtsuThresholdRoad(_veloImgPts, _segImg, _reflectivity);
 		IntersectIn3D(_veloImgPts, _veloPoints, _reflectivity, _refinedImg, thresh, _intersectedPts);
+
+		if(m_debug)
+			cout << "Entering ResultIntersector::()" << endl;
+	}
+
+	void ResultIntersector::operator()(Mat& _veloPoints, const Mat& _segImg, const Mat& _refinedImg, Eigen::ArrayXXf& _intersectedPts, Mat& _reflectivity, Eigen::MatrixXf& _veloImgPts, Mat& _vizImg) {
+		if(m_debug)
+			cout << "Entering ResultIntersector::()" << endl;
+		
+		Project(_veloPoints, _veloImgPts, _reflectivity);
+		double thresh = OtsuThresholdRoad(_veloImgPts, _segImg, _reflectivity);
+		IntersectIn3D(_veloImgPts, _veloPoints, _reflectivity, _refinedImg, thresh, _intersectedPts, _vizImg);
 
 		if(m_debug)
 			cout << "Entering ResultIntersector::()" << endl;

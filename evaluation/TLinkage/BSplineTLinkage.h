@@ -3,7 +3,7 @@
 
 #include"TLinkage.h"
 #include<unordered_map>
-#include"/home/ankit/Research/ALGLIB/src/interpolation.h"
+#include<interpolation.h>
 
 namespace LD {
 

@@ -324,6 +324,9 @@ namespace LD {
 			}
 		}
 
+		if(!_clusterID2PtIndices.size())
+			throw Sampler::MinSamplesNotFound();
+
 		if(m_debug)
 			cout << "Exiting TLinkage::Cluster()" << endl;
 	}

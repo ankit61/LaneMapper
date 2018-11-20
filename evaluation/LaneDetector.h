@@ -39,7 +39,6 @@ namespace LD {
 			string m_ratiosFile;
 			bool m_saveVizImg;
 			string m_vizImgPrefix;
-			string m_overlayedICNetPrefix;
 
 			virtual void ParseXML() override;
 	};

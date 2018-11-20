@@ -78,6 +78,10 @@ namespace LD {
 			virtual void Run() override;
 	
 			virtual void operator()(const Mat& _original, const Mat& _segImg, Mat& _refinedImg);
+
+			void CreateOverlay(const Mat& _original, const Mat& _refinedImg, Mat& _overlaid);
+
+			void SaveOverlaidImg(const Mat& _original, const Mat& _refinedImg, string _baseName);
 		
 	};
 

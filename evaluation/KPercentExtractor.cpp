@@ -34,7 +34,7 @@ namespace LD {
 			std::sort(flattened.data, flattened.data + flattened.total());
 			int numZeros = std::distance(flattened.datastart, std::upper_bound(flattened.datastart, flattened.dataend, 0));
 			int threshIndex = ((flattened.total() - numZeros) * (100 - m_k)) / 100;
-			int thresh = flattened.data[numZeros + threshIndex];
+			int thresh = flattened.data[numZeros + threshIndex] - 1;
 			
 			if(m_debug)
 				cout << "Threshold set to " << thresh << endl;

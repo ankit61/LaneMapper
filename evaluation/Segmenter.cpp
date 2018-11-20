@@ -217,17 +217,22 @@ namespace LD {
 			cout << "Image " << segImgName << "saved in " << m_segRoot << endl;
 
 		if(m_saveVizImg) {
-
-			cv::Mat overlayed;
-			CreateOverlay(_inputImg, _segImg, overlayed);
-			string overlayedImgName = m_vizImgPrefix + m_imgBaseName;
-			imwrite(m_overlayedRoot + "/" +  overlayedImgName, overlayed);
 			
-			if(m_debug) {
-				cout << "Image " << overlayedImgName << "saved in " << m_overlayedRoot << endl;
+			SaveOverlaidImg(_inputImg, _segImg, m_imgBaseName);
+			
+			if(m_debug)
 				cout << "Exiting Segmenter::Save()" << endl;
-			}
 		}
+	}
+
+	void Segmenter::SaveOverlaidImg(const cv::Mat& _inputImg, const cv::Mat& _segImg, string _baseName) {
+		cv::Mat overlayed;
+		CreateOverlay(_inputImg, _segImg, overlayed);
+		string overlayedImgName = m_vizImgPrefix + _baseName;
+		cv::imwrite(m_overlayedRoot + "/" +  overlayedImgName, overlayed);
+
+		if(m_debug)
+			cout << "Image " << overlayedImgName << "saved in " << m_overlayedRoot << endl;
 	}
 
 	void Segmenter::CreateOverlay(const cv::Mat& _inputImg, const cv::Mat& _segImg, cv::Mat& _overlayed) {

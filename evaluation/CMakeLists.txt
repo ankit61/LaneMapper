@@ -6,9 +6,9 @@ find_package(Boost COMPONENTS regex system filesystem REQUIRED)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_BUILD_TYPE Debug)
 
-set(ICNET_ROOT "/home/ankit/Research/ICNet")
-set(PUGIXML_ROOT "/home/ankit/Research/pugixml-1.9")
-set(ALGLIB_ROOT "/home/ankit/Research/ALGLIB")
+set(ICNET_ROOT "/home/ankit61/Research/Autonomous-Driving-Research")
+set(PUGIXML_ROOT "/home/ankit61/Research/pugixml-1.9")
+set(ALGLIB_ROOT "/home/ankit61/Research/ALGLIB")
 
 # include directory
 include_directories(
@@ -21,16 +21,16 @@ include_directories(
         ${ICNET_ROOT}/PSPNet/include
 		${PUGIXML_ROOT}/src
 		/usr/include/eigen3
+		${ALGLIB_ROOT}/src/
 )
 
 #inlcude libs
 link_directories(
 	${ICNET_ROOT}/PSPNet/.build_release/lib/
-	${PUGIXML_ROOT}
 )
 
 # set complile flag
-SET(LIBS "-lcaffe -lglog -lboost_system -lopencv_highgui -lopencv_imgproc -lopencv_core -lpugixml")
+SET(LIBS "-lcaffe -lglog -lboost_system -lopencv_highgui -lopencv_imgproc -lopencv_core")
 
 SET(GCC_COVERAGE_COMPILE_FLAGS "-Wall -Wno-sign-compare -MMD -MP -pthread -fPIC -g -O2")
 
@@ -73,6 +73,7 @@ add_executable(
 	FloodFill.cpp
 	Utilities.cpp
 	DBScan/DBScan.cpp
+	${PUGIXML_ROOT}/src/pugixml.cpp
 	${ALGLIB_ROOT}/src/alglibinternal.cpp
 	${ALGLIB_ROOT}/src/alglibmisc.cpp
 	${ALGLIB_ROOT}/src/ap.cpp

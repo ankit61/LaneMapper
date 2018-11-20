@@ -84,21 +84,29 @@ namespace LD {
 			imwrite(m_refinedRoot + "/" + m_refinedImgPrefix + m_imgBaseName, refinedImg);
 			
 			if(m_saveVizImg) {  //save overlayed image
-				Mat regions, overlayed;
-				string overlayedName = m_refinedRoot + "/" + m_vizImgPrefix + m_imgBaseName;
-				vector<Mat> channels;
-				channels.push_back(refinedImg);
-				channels.push_back(Mat::zeros(refinedImg.size(), CV_8U));
-				channels.push_back(Mat::zeros(refinedImg.size(), CV_8U));
-				merge(channels, regions);
-				addWeighted(regions, 0.5, original, 0.5, 0, overlayed);
-
-				imwrite(overlayedName, overlayed);
+				SaveOverlaidImg(original, refinedImg, m_imgBaseName);
 			}	
 		}
 		
 		if(m_debug)
 			cout << "Exiting Refiner::Run()" << endl;
+	}
+
+	void Refiner::SaveOverlaidImg(const Mat& _original, const Mat& _refinedImg, string _imgBaseName) {
+		string overlayedName = m_refinedRoot + "/" + m_vizImgPrefix + _imgBaseName;
+		Mat overlayed;
+		CreateOverlay(_original, _refinedImg, overlayed);
+		imwrite(overlayedName, overlayed);
+	}
+	
+	void Refiner::CreateOverlay(const Mat& _original, const Mat& _refinedImg, Mat& _overlaid) {
+		Mat regions;
+		vector<Mat> channels;
+		channels.push_back(_refinedImg);
+		channels.push_back(Mat::zeros(_refinedImg.size(), CV_8U));
+		channels.push_back(Mat::zeros(_refinedImg.size(), CV_8U));
+		merge(channels, regions);
+		addWeighted(regions, 0.5, _original, 0.5, 0, _overlaid);	
 	}
 
 }

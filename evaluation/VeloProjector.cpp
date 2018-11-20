@@ -90,8 +90,6 @@ namespace LD {
 			cout << "Exiting VeloProjector::Run() " << endl;
 	}
 
-
-
 	void VeloProjector::ReadVeloData(string _binFile, Mat& _veloPoints) {
 		//taken from KITTI website	
 		if(m_debug)

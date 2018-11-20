@@ -3,7 +3,7 @@
 
 #include<Eigen/Dense>
 #include"BaseLD.h"
-#include"/home/ankit/Research/ALGLIB/src/interpolation.h"
+#include<interpolation.h>
 
 namespace LD {
 

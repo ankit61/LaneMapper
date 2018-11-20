@@ -21,9 +21,8 @@ namespace LD {
 		m_ratiosFile 	  		= m_xml.attribute("ratiosFile").as_string();
 		m_saveVizImg	  		= m_xml.attribute("saveVizImg").as_bool(true);
 		m_vizImgPrefix	  		= m_xml.attribute("vizImgPrefix").as_string();
-		m_overlayedICNetPrefix 	= m_xml.attribute("overlayedICNetPrefix").as_string();
 
-		if(m_imgRoot.empty() || m_imgRoot.empty() || m_veloRoot.empty() || m_ratiosFile.empty() || (m_saveVizImg && m_vizImgPrefix.empty()) || m_overlayedICNetPrefix.empty())
+		if(m_imgRoot.empty() || m_imgRoot.empty() || m_veloRoot.empty() || m_ratiosFile.empty() || (m_saveVizImg && m_vizImgPrefix.empty()))
 			throw runtime_error("at least one of the following attributes is missing: imgRoot, imgFile, veloRoot, ratiosFile, vizImgPrefix, saveVizImg");	
 
 		if(m_debug)
@@ -41,16 +40,22 @@ namespace LD {
 		Eigen::MatrixXf veloImg;
 		m_segmenter(_inputImg, segImg);
 
-		if(m_debug) {
-			
-			cv::Mat overlayed;
-			m_segmenter.CreateOverlay(_inputImg, segImg, overlayed);
-			cv::imwrite(m_overlayedICNetPrefix + m_imgBaseName, overlayed);
-			
-		}
+		if(m_debug)
+			m_segmenter.SaveOverlaidImg(_inputImg, segImg, m_imgBaseName);
 
 		m_refiner(_inputImg, segImg, refinedImg);
-		m_resultIntersector(_veloPoints, segImg, refinedImg, intersectedPts, reflectivity, veloImg);
+
+		if(m_debug) {
+			m_refiner.SaveOverlaidImg(_inputImg, refinedImg, m_imgBaseName);
+			Mat vizImg = _inputImg;
+			m_resultIntersector(_veloPoints, segImg, refinedImg, intersectedPts, reflectivity, veloImg, vizImg);
+			m_resultIntersector.PrintToFile(intersectedPts);
+			m_resultIntersector.SaveVizImg(vizImg, m_imgBaseName);	
+			
+		}
+		else
+			m_resultIntersector(_veloPoints, segImg, refinedImg, intersectedPts, reflectivity, veloImg);
+
 		m_bSplineTLinkage(intersectedPts, clusters, _models);
 		m_laneQualityChecker(intersectedPts, clusters, _veloPoints, reflectivity, veloImg, _inputImg, segImg,  refinedImg, _brightnessRatio, _reflectivityRatio);
 		
@@ -73,7 +78,7 @@ namespace LD {
 			cout << "Entering LaneDetector::Run()" << endl;
 
 		std::ifstream fin(m_imgFile.c_str());
-		std::ofstream fout(m_ratiosFile.c_str());
+		std::ofstream fout(m_ratiosFile.c_str(), std::ios_base::app);
 		string line;
 	
 		while(std::getline(fin, line)) {

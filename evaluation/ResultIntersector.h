@@ -9,9 +9,11 @@
 namespace LD {
 	class ResultIntersector : public VeloProjector {
 		public:
-			ResultIntersector(string _xmlFile) : VeloProjector(_xmlFile) { ParseXML(); m_fout.open(m_outputRoot + "/" +m_outputFile); } 	
+			ResultIntersector(string _xmlFile) : VeloProjector(_xmlFile) { ParseXML(); m_fout.open(m_outputRoot + "/" +m_outputFile, std::ios_base::app); } 	
 
 			void operator()(Mat& _veloPoints, const Mat& _segImg, const Mat& _refinedImg, Eigen::ArrayXXf& _intersectedPts, Mat& _reflectivity, Eigen::MatrixXf& _veloImgPoints);
+
+			void operator()(Mat& _veloPoints, const Mat& _segImg, const Mat& _refinedImg, Eigen::ArrayXXf& _intersectedPts, Mat& _reflectivity, Eigen::MatrixXf& _veloImgPts, Mat& _vizImg);
 
 			bool isMode2D() { return m_printOnly2D; }
 		protected:
@@ -31,12 +33,15 @@ namespace LD {
 			
 			void IntersectIn3D(const Eigen::MatrixXf _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, const Mat& _refinedImg, const double& _thresh, Eigen::ArrayXXf& _intersectedImg, Mat& _vizImg);
 			void IntersectIn3D(const Eigen::MatrixXf _veloImg, const Mat& _veloPoints, const Mat& _reflectivity, const Mat& _refinedImg, const double& _thresh, Eigen::ArrayXXf& _intersectedPts);
-	
-			void PrintToFile(Eigen::ArrayXXf& _intersectedPts);
 
 			double OtsuThresholdRoad(const Eigen::MatrixXf _veloImg, const Mat& _segImg, const Mat& _reflectivity);
 
 			virtual void ParseXML() override;
+			
+		public:
+			void PrintToFile(Eigen::ArrayXXf& _intersectedPts);
+
+			void SaveVizImg(const Mat& _vizImg, string _imgBaseName);
 
 	};
 }
