@@ -1,6 +1,0 @@
-Makefile
-*.caffemodel
-CMake*
-*.txt
-LaneDetection
-*.cmake
