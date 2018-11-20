@@ -22,6 +22,9 @@ include_directories(
 		${PUGIXML_ROOT}/src
 		/usr/include/eigen3
 		${ALGLIB_ROOT}/src/
+		./include/
+		./TLinkage/include
+		./DBScan/
 )
 
 #inlcude libs
@@ -47,31 +50,31 @@ add_definitions(
 
 add_executable(
 	LaneDetection 
-	main.cpp
-	LaneDetector.cpp
-	Segmenter.cpp 
-	Refiner.cpp 
-	KPercentExtractor.cpp
-	LaneExtractor.cpp
-	VeloProjector.cpp 
-	ResultIntersector.cpp 
+	src/main.cpp
+	src/LaneDetector.cpp
+	src/Segmenter.cpp 
+	src/Refiner.cpp 
+	src/KPercentExtractor.cpp
+	src/LaneExtractor.cpp
+	src/VeloProjector.cpp 
+	src/ResultIntersector.cpp 
 #	SurfaceDataMaker.cpp
-	LaneQualityChecker.cpp
-	TLinkage/TLinkage.cpp
+	src/LaneQualityChecker.cpp
+	TLinkage/src/TLinkage.cpp
 #	TLinkage/Line2DTLinkage.cpp
 #	TLinkage/PlaneTLinkage.cpp
 #	TLinkage/Circle2DTLinkage.cpp
 #	TLinkage/SurfaceTLinkage.cpp
 #	TLinkage/RoadTLinkage.cpp
 #	TLinkage/Line3DTLinkage.cpp
-	TLinkage/BSplineTLinkage.cpp
-	TLinkage/KLargestOR.cpp
-	TLinkage/MaxDiffOR.cpp
-	TLinkage/UniformSampler.cpp
-	TLinkage/DistBasedSampler.cpp
-	PointsVisualizer.cpp
-	FloodFill.cpp
-	Utilities.cpp
+	TLinkage/src/BSplineTLinkage.cpp
+	TLinkage/src/KLargestOR.cpp
+	TLinkage/src/MaxDiffOR.cpp
+	TLinkage/src/UniformSampler.cpp
+	TLinkage/src/DistBasedSampler.cpp
+	src/PointsVisualizer.cpp
+	src/FloodFill.cpp
+	src/Utilities.cpp
 	DBScan/DBScan.cpp
 	${PUGIXML_ROOT}/src/pugixml.cpp
 	${ALGLIB_ROOT}/src/alglibinternal.cpp
