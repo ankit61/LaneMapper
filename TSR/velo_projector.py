@@ -2,10 +2,9 @@ import sys, os
 sys.path.insert(0, os.path.join(os.getcwd(), 'utils'))
 import constants
 import numpy as np
-import abc
 import cv2
 
-class VeloProjector(object, metaclass = abc.ABCMeta):
+class VeloProjector(object):
     
     def __init__(self, calib, cam_num = constants.CAM_NUM, min_x = constants.MIN_X):
         self.__cam_num  = cam_num
@@ -44,26 +43,18 @@ class VeloProjector(object, metaclass = abc.ABCMeta):
 
         return proj_points[:,:-1]
 
-    @abc.abstractmethod
-    def __process_proj_points(self, proj_points):
-        pass
-
-    def __call__(self, velo_points, display_img = True, img = None):
+    def project(self, velo_points):
         velo_points, reflectivity  = self.__prepare_velo_points(velo_points)
         proj_points  = self.__project_to_img(velo_points)
 
-        print(reflectivity[20:25])
+        img_pts_reflectivity = np.zeros((proj_points.shape[0], proj_points.shape[1] + 1))
+        img_pts_reflectivity[:, -1]  = reflectivity
+        img_pts_reflectivity[:, :-1] = proj_points
         
-        if(display_img and img is not None):
-            viz_img = self.__generate_viz_img(proj_points, reflectivity, img)
-            cv2.imshow('debug', viz_img)
-            cv2.waitKey(0)
-            cv2.waitKey(0)
-            
-        self.__process_proj_points(proj_points)
+        return img_pts_reflectivity
 
-    def __generate_viz_img(self, velo_proj_points, reflectivity, img):
+    def generate_viz_img(self, img_pts_reflectivity, img):
         viz_img = img.copy()
-        for (x, y), r in zip(velo_proj_points, reflectivity):
+        for (x, y, r) in img_pts_reflectivity:
             cv2.circle(viz_img, (int(x), int(y)), 5, (int(r * 255), 0, 0))  #draw blue circles
         return viz_img
