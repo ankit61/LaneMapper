@@ -1,8 +1,7 @@
-import sys, os
-sys.path.insert(0, os.path.join(os.getcwd(), 'utils'))
-import constants
+from utils import constants
 import numpy as np
 import cv2
+from utils import LIDARFactor
 
 class VeloProjector(object):
     
@@ -47,14 +46,16 @@ class VeloProjector(object):
         velo_points, reflectivity  = self.__prepare_velo_points(velo_points)
         proj_points  = self.__project_to_img(velo_points)
 
-        img_pts_reflectivity = np.zeros((proj_points.shape[0], proj_points.shape[1] + 1))
-        img_pts_reflectivity[:, -1]  = reflectivity
-        img_pts_reflectivity[:, :-1] = proj_points
-        
-        return img_pts_reflectivity
+        img_pts = np.zeros((proj_points.shape[0], proj_points.shape[1] + 2))
+        img_pts[:, 0:2] = proj_points
+        img_pts[:, 2]   = reflectivity
+        img_pts[:, 3]   = np.sqrt(np.square(velo_points[:, 0]) + np.square(velo_points[:, 1]) + np.square(velo_points[:, 2]))
+        img_pts[:, 3]   = img_pts[:, 3] / np.max(img_pts[:, 3]) #"normalize" depth
 
-    def generate_viz_img(self, img_pts_reflectivity, img):
+        return img_pts
+
+    def generate_viz_img(self, img_pts, img, factor = LIDARFactor.REFLECTIVITY):
         viz_img = img.copy()
-        for (x, y, r) in img_pts_reflectivity:
-            cv2.circle(viz_img, (int(x), int(y)), 5, (int(r * 255), 0, 0))  #draw blue circles
+        for (x, y, r, d) in img_pts:
+            cv2.circle(viz_img, (int(x), int(y)), 5, (int(r * 255) if (factor == LIDARFactor.REFLECTIVITY) else int(d * 255), 0, 0))  #draw blue circles
         return viz_img
