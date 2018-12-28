@@ -1,7 +1,7 @@
 class _const:
     KITTI_BASE_DIR      = '/home/ankit/Research/Autonomous-Driving-Research/Datasets/KITTI'
-    DATE                = '2011_09_26'
-    DRIVE               = '0095'
+    DATE                = '2011_09_29'
+    DRIVE               = '0004'
     
     MIN_X               = 5
     CAM_NUM             = 2
