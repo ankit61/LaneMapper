@@ -3,9 +3,11 @@ import pykitti
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 import sys, os
 sys.path.insert(0, os.path.join(os.path.split(os.path.realpath(__file__))[0], 'utils'))
 import constants
+import math
 
 basedir = constants.KITTI_BASE_DIR
 date    = constants.DATE
@@ -40,9 +42,13 @@ T   = T_L - T_R
 
 _, _, _, _, Q, _, _ = cv2.stereoRectify(K_L, D_L, K_R, D_R, (int(img_size[0]), int(img_size[1])), R, T)
 
-points = cv2.reprojectImageTo3D(disp, Q)
+points = cv2.reprojectImageTo3D(disp, Q, True)
 
-f, ax = plt.subplots(1, 1, figsize=(150, 100))
-ax.imshow(disp)
-ax.set_title('Gray Stereo Disparity')
-plt.show()
+xs = points[:, :, 0].flatten()
+ys = points[:, :, 1].flatten()
+zs = points[:, :, 2].flatten()
+
+with open('points.obj', 'w') as f:
+    for x, y, z in zip(xs, ys, zs):
+        if(not (math.isinf(x) or math.isinf(y) or math.isinf(z))):
+            f.write('v ' + str(x) + ' ' +  str(y) + ' ' + str(z) + '\n')
