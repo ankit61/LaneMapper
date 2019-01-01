@@ -94,6 +94,10 @@ class raw:
         """Read RGB stereo pair at the specified index."""
         return (self.get_cam2(idx), self.get_cam3(idx))
 
+    def get_base_filename(self, idx):
+        """Get filename without the extension."""
+        return os.path.basename(self.cam0_files[idx]).split('.')[0]
+
     @property
     def velo(self):
         """Generator to read velodyne [x,y,z,reflectance] scan data from binary files."""
