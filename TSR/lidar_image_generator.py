@@ -22,8 +22,9 @@ class LIDARImageGenerator(velo_projector.VeloProjector):
         return self.__refine(self.generate_raw(velo_points, img_size), threshold)
 
     def __refine(self, lidar_img, threshold = constants.REFLECTIVITY_THRESH):
+
         _, refined_img = cv2.threshold(lidar_img, threshold, 255, cv2.THRESH_TOZERO)
-        refined_img = cv2.dilate(refined_img, cv2.getStructuringElement(cv2.MORPH_RECT, (2,2)))
+        refined_img = cv2.dilate(refined_img, cv2.getStructuringElement(cv2.MORPH_RECT, (3,3)))
 
         return refined_img
     
