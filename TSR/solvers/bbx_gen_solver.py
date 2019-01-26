@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import bbx_generator
 import pykitti
 import lidar_image_generator
@@ -7,7 +6,6 @@ import numpy as np
 import cv2
 import solver
 import os
-import lidar_image_generator
 
 class BbxGenSolver(solver.Solver):
     def __init__(self, output_base_dir = 'Results/TSR_BBx', threshold = constants.REFLECTIVITY_THRESH, base_dir = constants.KITTI_BASE_DIR, date = constants.DATE, drive = constants.DRIVE):
