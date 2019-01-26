@@ -3,3 +3,5 @@ Datasets
 *__pycache__*
 .vscode
 .gitignore
+Datasets/
+Results/
