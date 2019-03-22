@@ -1,23 +1,16 @@
 import torchvision.models as models
 import torch.nn as nn
+import torch
 
-class TSRNet(torch.nn.Module):
+torch.set_default_tensor_type(torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor)
 
-    def __init__(self, num_signs):
-        self.__vgg_features = models.vgg16(pretrained=True).features
-        
-        self.__classifier = models.vgg16(pretrained=True).classifier
-        self.__classifier[-1] = nn.Linear(self.__vgg_classifier[-1].in_features, num_signs + 1) #adding 1 for background class
+class TSRNet(nn.Module):
 
-        self.__classifier = models.vgg16(pretrained=True).classifier
-        self.__classifier[-1] = nn.Linear(self.__vgg_classifier[-1].in_features, num_signs + 1) #adding 1 for background class        
-        
-        self.__bbx_regressor = models.vgg16(pretrained=True).classifier
-        self.__classifier[-1] = nn.Linear(self.__vgg_classifier[-1].in_features, 4 * num_signs)
+    def __init__(self, num_traffic_signs):
+        super(TSRNet, self).__init__()
+        self.__net = models.resnet50(pretrained=True)
+        self.__net.fc = nn.Linear(self.__net.fc.in_features, num_traffic_signs, bias=True)
+        self.__sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        features = self.__vgg_features(x)
-        class_probabilities = self.__classifier(features)
-        pred_bbxs = self.__bbx_regressor(features)
-
-        return class_probabilities, pred_bbxs
+        return torch.min(0.99999997 * torch.ones((x.shape[0], self.__net.fc.out_features)), self.__sigmoid(self.__net(x)))
