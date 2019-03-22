@@ -3,12 +3,14 @@
 import os
 import random
 import shutil
+from pathlib import Path
 
-classes_file    = '/home/netbot/Research/Autonomous-Driving-Research/TSR/nn/classes.txt'
-gtsrb_root      = '/home/netbot/Research/Autonomous-Driving-Research/Datasets/GTSRB/Final_Training/Images/'
-train_dir       = '/home/netbot/Research/Autonomous-Driving-Research/Datasets/GTSRB/train/'
-val_dir         = '/home/netbot/Research/Autonomous-Driving-Research/Datasets/GTSRB/val/'
-test_dir        = '/home/netbot/Research/Autonomous-Driving-Research/Datasets/GTSRB/test/'
+base_dir		= str(Path(__file__).parents[2])
+classes_file    = os.path.join(base_dir, 'TSR/nn/classes.txt')
+gtsrb_root      = os.path.join(base_dir, 'Datasets/GTSRB/Final_Training/Images/')
+train_dir       = os.path.join(base_dir, 'Datasets/GTSRB/train/')
+val_dir         = os.path.join(base_dir, 'Datasets/GTSRB/val/')
+test_dir        = os.path.join(base_dir, 'Datasets/GTSRB/test/')
 
 useful_classes = [0, 1, 2, 3, 4, 5, 13, 25, 14, 22, 43]
 total_train_imgs = 19000

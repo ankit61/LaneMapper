@@ -4,8 +4,9 @@ import torch
 import os
 import numpy as np
 import sys
+from pathlib import Path
 
-path = '/home/netbot/Research/Autonomous-Driving-Research/Datasets/GTSRB/train/'#sys.argv[1]
+path = sys.argv[1] #os.path.join(str(Path(__file__).parents[2]), '/Datasets/GTSRB/train/')
 
 image_names = os.listdir(path) 
 
