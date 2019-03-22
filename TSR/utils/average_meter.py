@@ -10,7 +10,7 @@ class AverageMeter:
     def update(self, val):
         self.__count += 1
         self.__sum += val
-        self.__las = val
+        self.__last = val
 
     def avg(self):
         return self.__sum / self.__count
