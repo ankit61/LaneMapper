@@ -38,7 +38,8 @@ class TSRNetRunner:
                  lr                 = constants.LR,
                  momentum           = constants.MOMENTUM,
                  threshold_prob     = constants.THRESHOLD_PROB,
-                 load_model_path    = ''):
+                 load_model_path    = '',
+                 should_log_tensorboard = False):
 
         self.__net                  = net.TSRNet(num_traffic_signs).cuda() if torch.cuda.is_available() else net.TSRNet(num_traffic_signs)
         
@@ -57,6 +58,7 @@ class TSRNetRunner:
         self.__lr                   = lr
         self.__momentum             = momentum
         self.__threshold_prob       = threshold_prob
+        self.__should_log_tensorboard = should_log_tensorboard
 
         self.__train_transforms_single_class = transforms.Compose(
                                                 [
@@ -108,7 +110,8 @@ class TSRNetRunner:
                 
                 loss_meter.update(loss.item())
                 percent_ones_meter.update(percent_ones)
-                self.__writer.add_scalar('train/loss', loss.item(), epoch * len(train_loader) + i)
+                if(self.__should_log_tensorboard):
+                    self.__writer.add_scalar('train/loss', loss.item(), epoch * len(train_loader) + i)
                 
                 optimizer.zero_grad()
                 loss.backward()
@@ -159,9 +162,10 @@ class TSRNetRunner:
                 recall_meter.update(recall)
                 percent_ones_meter.update(percent_ones)
                 
-                self.__writer.add_scalar('val/loss', loss.item(), epoch * len(test_loader) + i)
-                self.__writer.add_scalar('val/acc', acc, epoch * len(test_loader) + i)
-                self.__writer.add_scalar('val/recall', recall, epoch * len(test_loader) + i)
+                if(self.__should_log_tensorboard):
+                    self.__writer.add_scalar('val/loss', loss.item(), epoch * len(test_loader) + i)
+                    self.__writer.add_scalar('val/acc', acc, epoch * len(test_loader) + i)
+                    self.__writer.add_scalar('val/recall', recall, epoch * len(test_loader) + i)
 
                 if i % self.__print_freq == 0:
                     print(
@@ -190,13 +194,15 @@ class TSRNetRunner:
         gt_ts   = gt >= self.__threshold_prob
         
         tp = (pred_ts * gt_ts).sum()
-        self.__writer.add_scalar('val/tp', tp, global_step)
         fp = (pred_ts * ~gt_ts).sum()
-        self.__writer.add_scalar('val/fp', fp, global_step)
         fn = (~pred_ts * gt_ts).sum()
-        self.__writer.add_scalar('val/fn', fn, global_step)
         tn = (~pred_ts * ~gt_ts).sum()
-        self.__writer.add_scalar('val/tn', tn, global_step)
+        
+        if(self.__should_log_tensorboard):
+            self.__writer.add_scalar('val/tp', tp, global_step)
+            self.__writer.add_scalar('val/fp', fp, global_step)
+            self.__writer.add_scalar('val/fn', fn, global_step)
+            self.__writer.add_scalar('val/tn', tn, global_step)
         
         return float(tp + tn) / float(tp + fp + tn + fn), float(tp) / float(tp + fn)
 
