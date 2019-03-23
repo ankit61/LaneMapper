@@ -4,6 +4,7 @@ import numpy as np
 import abc
 from utils import constants
 from tqdm import tqdm
+from PIL import Image
 
 class Solver(abc.ABC):
 
@@ -19,6 +20,12 @@ class Solver(abc.ABC):
             return cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         elif(img.shape[2] == 1):
             return np.array(img)
+
+    def cv2_to_pil(self, cv2_img):
+        if(cv2_img.shape[2] == 3):
+            return Image.fromarray(cv2.cvtColor(cv2_img, cv2.COLOR_BGR2RGB))
+        elif(cv2_img.shape[2] == 1):
+            return Image.fromarray(cv2_img)
 
     def run(self, start = 0, end = 10000):
         for i in tqdm(range(start, min(end, len(self._dataset)))):
