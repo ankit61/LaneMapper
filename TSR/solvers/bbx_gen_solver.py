@@ -17,14 +17,18 @@ class BbxGenSolver(solver.Solver):
     def get_bbx_img(self, img, velo):
         lidar_img = self.__img_gen.generate_refined(velo, img.shape)
         bbxs = self.__bbx_gen.get_bbxs(lidar_img)
-        return self.__bbx_gen.draw_bbxs(bbxs, img)
+        if(bbxs):
+            return self.__bbx_gen.draw_bbxs(bbxs, img)
+        else:
+            return None
 
     def solve(self, img, velo, base_filename):
         try:
             bbx_img = self.get_bbx_img(img, velo)
-            cv2.imwrite(os.path.join(self.__save_dir, base_filename + '.png'), bbx_img)
         except bbx_generator.BbxGenerator.NoClustersFound:
-            pass
+            return
+        if(type(bbx_img) != type(None)):
+             cv2.imwrite(os.path.join(self.__save_dir, base_filename + '.png'), bbx_img)
 
     def visualize(self, img, velo):
         bbx_img = self.get_bbx_img(img, velo)
