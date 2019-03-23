@@ -8,9 +8,8 @@ import os
 
 sys.path.append(str(Path(os.path.realpath(__file__)).parents[1]))
 
-from utils import constants
+from utils import constants, average_meter
 import time
-from utils import average_meter
 import dataset
 import tensorboardX
 from torchvision import transforms
@@ -24,10 +23,6 @@ class WeightedBCELoss():
       
     def __call__(self, pred, target):
       return (-self.__w * target * torch.log(pred) - (1 - target) * torch.log(1 - pred)).mean()
-
-class ToDefaultTensor():
-    def __call__(self, x):
-        return transforms.ToTensor()(x).cuda() if torch.cuda.is_available() else transforms.ToTensor()(x)
 
 class TSRNetRunner:
     def __init__(self, 
@@ -60,36 +55,11 @@ class TSRNetRunner:
         self.__threshold_prob       = threshold_prob
         self.__should_log_tensorboard = should_log_tensorboard
 
-        self.__train_transforms_single_class = transforms.Compose(
-                                                [
-                                                    transforms.RandomChoice([
-                                                        transforms.CenterCrop(constants.IN_SIZE),
-                                                        transforms.Resize(constants.IN_SIZE),
-                                                        transforms.RandomCrop(constants.IN_SIZE, pad_if_needed=True)
-                                                    ]),
-                                                    transforms.RandomApply([transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)], 0.2),
-                                                    ToDefaultTensor(),
-                                                    transforms.Normalize(constants.MEAN, constants.STD)
-                                                ]
-                                            )
+        self.__train_transforms_single_class = constants.TRAIN_TRANSFORMS_SINGLE_CLASS
         
-        self.__train_transforms_multi_class  = transforms.Compose(
-                                                [
-                                                    
-                                                    transforms.Resize(constants.IN_SIZE),
-                                                    transforms.RandomApply([transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)], 0.2),
-                                                    ToDefaultTensor(),
-                                                    transforms.Normalize(constants.MEAN, constants.STD)
-                                                ]
-                                            )
+        self.__train_transforms_multi_class  = constants.TRAIN_TRANSFORMS_MULTI_CLASS
 
-        self.__test_transforms = transforms.Compose(
-                        [                         
-                            transforms.Resize(constants.IN_SIZE),
-                            ToDefaultTensor(),
-                            transforms.Normalize(constants.MEAN, constants.STD)
-                        ]
-                    )
+        self.__test_transforms = constants.TEST_TRANSFORMS
 
     def train(self, train_loader, optimizer, epoch):
         self.__net.train()
@@ -207,17 +177,17 @@ class TSRNetRunner:
         return float(tp + tn) / float(tp + fp + tn + fn), float(tp) / float(tp + fn)
 
     def run(self):
-        train_dataset = dataset.TSRDataset(self.__train_path, self.__train_transforms_single_class, self.__train_transforms_multi_class, self.__num_traffic_signs)
+        train_dataset = dataset.TSRDataset(self.__train_transforms_single_class, self.__train_transforms_multi_class, self.__num_traffic_signs, root_dir = self.__train_path)
         train_loader  = torch.utils.data.DataLoader(
             train_dataset, batch_size = self.__batch_size, shuffle=True
         )
 
-        val_dataset = dataset.TSRDataset(self.__val_path, self.__test_transforms, self.__test_transforms, self.__num_traffic_signs)
+        val_dataset = dataset.TSRDataset(self.__test_transforms, self.__test_transforms, self.__num_traffic_signs, root_dir = self.__val_path)
         val_loader  = torch.utils.data.DataLoader(
             val_dataset, batch_size = self.__batch_size, shuffle=True
         )
 
-        test_dataset = dataset.TSRDataset(self.__test_path, self.__test_transforms, self.__test_transforms, self.__num_traffic_signs)
+        test_dataset = dataset.TSRDataset(self.__test_transforms, self.__test_transforms, self.__num_traffic_signs, root_dir = self.__test_path)
         test_loader  = torch.utils.data.DataLoader(
             test_dataset, batch_size = self.__batch_size, shuffle=True
         )
