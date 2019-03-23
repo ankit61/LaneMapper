@@ -24,7 +24,8 @@ class TSRDetectSolver(solver.Solver):
         with torch.no_grad():
             for imgs in nn_loader:
                 probs = self.__net(imgs)
-                list(map(lambda x, pred_ts = pred_ts : pred_ts.add(x[1].item()), (img_prob >= constants.THRESHOLD_PROB).non_zero()))
+                print(probs.max())
+                list(map(lambda x, pred_ts = pred_ts : pred_ts.add(x[1].item()), (probs >= constants.THRESHOLD_PROB).nonzero()))
 
         return pred_ts
 
@@ -33,13 +34,15 @@ class TSRDetectSolver(solver.Solver):
         bbxs = self.__bbx_gen.get_bbxs(lidar_img)
         pil_img = self.cv2_to_pil(cv2_img)
         
-        potential_sign_imgs = []
-        for bbx in bbxs:
-            potential_sign_imgs.append(pil_img.crop(tuple(bbx)))
+        if(bbxs):
+            potential_sign_imgs = []
+            for bbx in bbxs:
+                potential_sign_imgs.append(pil_img.crop(tuple(bbx)))
      
-        pred_ts = self.run_nn(potential_sign_imgs)
+            pred_ts = self.run_nn(potential_sign_imgs)
 
-        self.__output_file.write(base_filename + ': ')
-        for ts in pred_ts:
-            self.__output_file.write(self.__classes[ts] + '\t')
-        self.__output_file.write('\n')
+            if(pred_ts):
+                self.__output_file.write(base_filename + ': ')
+                for ts in pred_ts:
+                    self.__output_file.write(self.__classes[ts] + '\t')
+                self.__output_file.write('\n')
