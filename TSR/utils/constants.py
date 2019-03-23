@@ -1,5 +1,11 @@
 import os
 from pathlib import Path
+from torchvision import transforms
+import torch
+
+class ToDefaultTensor():
+    def __call__(self, x):
+        return transforms.ToTensor()(x).cuda() if torch.cuda.is_available() else transforms.ToTensor()(x)
 
 class _const:
     #general
@@ -40,10 +46,37 @@ class _const:
     STD                 = [0.17315, 0.17867, 0.19009]
     IN_SIZE             = [52, 52]
     BEST_MODEL_PATH     = os.path.join(BASE_DIR, 'TSR/nn/best.pth')
-
+    
+    TRAIN_TRANSFORMS_SINGLE_CLASS = transforms.Compose(
+                                        [
+                                            transforms.RandomChoice([
+                                                transforms.CenterCrop(IN_SIZE),
+                                                transforms.Resize(IN_SIZE),
+                                                transforms.RandomCrop(IN_SIZE, pad_if_needed=True)
+                                            ]),
+                                            transforms.RandomApply([transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)], 0.2),
+                                            ToDefaultTensor(),
+                                            transforms.Normalize(MEAN, STD)
+                                        ]
+                                    )
+    TRAIN_TRANSFORMS_MULTI_CLASS  = transforms.Compose(
+                                        [        
+                                            transforms.Resize(IN_SIZE),
+                                            transforms.RandomApply([transforms.ColorJitter(0.5, 0.5, 0.5, 0.25)], 0.2),
+                                            ToDefaultTensor(),
+                                            transforms.Normalize(MEAN, STD)
+                                        ]
+                                    )
+    TEST_TRANSFORMS               = transforms.Compose(
+                                        [                         
+                                            transforms.Resize(IN_SIZE),
+                                            ToDefaultTensor(),
+                                            transforms.Normalize(MEAN, STD)
+                                        ]
+                                    )
 
     class ConstError(TypeError): pass
-    def __setattr__(self, name, value):
+    def __setattr__( name, value):
         raise ConstError('attempt to change const value')
 
 import sys

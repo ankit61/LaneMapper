@@ -6,7 +6,6 @@ import shutil
 from pathlib import Path
 
 base_dir		= str(Path(__file__).parents[2])
-classes_file    = os.path.join(base_dir, 'TSR/nn/classes.txt')
 gtsrb_root      = os.path.join(base_dir, 'Datasets/GTSRB/Final_Training/Images/')
 train_dir       = os.path.join(base_dir, 'Datasets/GTSRB/train/')
 val_dir         = os.path.join(base_dir, 'Datasets/GTSRB/val/')
