@@ -5,16 +5,16 @@ import random
 import shutil
 from pathlib import Path
 
-base_dir		= str(Path(__file__).parents[2])
+base_dir		= str(Path(os.path.realpath(__file__)).parents[2])
 gtsrb_root      = os.path.join(base_dir, 'Datasets/GTSRB/Final_Training/Images/')
 train_dir       = os.path.join(base_dir, 'Datasets/GTSRB/train/')
 val_dir         = os.path.join(base_dir, 'Datasets/GTSRB/val/')
 test_dir        = os.path.join(base_dir, 'Datasets/GTSRB/test/')
 
-useful_classes = [0, 1, 2, 3, 4, 5, 13, 25, 14, 22, 43]
-total_train_imgs = 19000
-total_val_imgs   = 1000
-total_test_imgs  = 7000
+useful_classes   = [0, 1, 2, 3, 4, 5, 13, 25, 14, 22, 43]
+total_train_imgs = 40000
+total_val_imgs   = 0
+total_test_imgs  = 2000
 total_imgs       = total_test_imgs + total_val_imgs + total_train_imgs
 
 train_count = 0
@@ -41,7 +41,10 @@ for idx, c in enumerate(useful_classes):
         num_test    = int(total_test_imgs / total_imgs * len(img_files))
     
     train = img_files[:num_train]
-    val   = img_files[num_train:num_train + num_val]
+    if(num_val > 0):
+        val   = img_files[num_train:num_train + num_val]
+    else:
+        val = []
     test  = img_files[num_train + num_val:]
 
     for img_file in train:
