@@ -13,19 +13,19 @@ class TSRDetectSolver(solver.Solver):
         self.__lidar_img_gen    = lidar_image_generator.LIDARImageGenerator(self._dataset.calib)
         self.__output_file      = open(os.path.join(constants.BASE_DIR, 'TSR/traffic_signs.txt'), 'w')
         classes_file            = open(os.path.join(constants.BASE_DIR, 'TSR/nn/classes.txt'))
-        self.__classes          = [classes_file.readline() for _ in range(constants.NUM_TRAFFIC_SIGNS)]
+        self.__classes          = [classes_file.readline().strip() for _ in range(constants.NUM_TRAFFIC_SIGNS)]
 
     def run_nn(self, img_list):
         nn_dataset = dataset.TSRDataset(single_class_transforms = constants.TEST_TRANSFORMS, multi_class_transforms = constants.TEST_TRANSFORMS, img_list = img_list)
         nn_loader  = torch.utils.data.DataLoader(
             nn_dataset, batch_size = constants.BATCH_SIZE
         )
-        pred_ts = set()
+        pred_ts = {}
         with torch.no_grad():
             for imgs in nn_loader:
                 probs = self.__net(imgs)
-                print(probs.max())
-                list(map(lambda x, pred_ts = pred_ts : pred_ts.add(x[1].item()), (probs >= constants.THRESHOLD_PROB).nonzero()))
+
+                list(map(lambda x, pred_ts = pred_ts, probs = probs : pred_ts.update( { x[1].item() : probs[(x[0].item(), x[1].item())].item() } ), (probs >= constants.THRESHOLD_PROB).nonzero()))
 
         return pred_ts
 
@@ -44,5 +44,6 @@ class TSRDetectSolver(solver.Solver):
             if(pred_ts):
                 self.__output_file.write(base_filename + ': ')
                 for ts in pred_ts:
-                    self.__output_file.write(self.__classes[ts] + '\t')
+                    self.__output_file.write('(' + str(self.__classes[ts]) + ', ' + str(pred_ts[ts]) + ')\t')
                 self.__output_file.write('\n')
+                self.__output_file.flush()
