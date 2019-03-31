@@ -38,9 +38,9 @@ class _const:
     LR                  = 0.01
     MOMENTUM            = 0.9
     NUM_TRAFFIC_SIGNS   = 11
-    BATCH_SIZE          = 128
+    BATCH_SIZE          = 256
     GTSRB_ROOT          = os.path.join(BASE_DIR, 'Datasets/GTSRB')
-    THRESHOLD_PROB      = 0.7
+    THRESHOLD_PROB      = 0.85
     TRAIN_EPOCHS        = 80
     MEAN                = [0.37043, 0.32912, 0.32900]
     STD                 = [0.17315, 0.17867, 0.19009]
