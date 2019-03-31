@@ -18,7 +18,7 @@ from torchvision import transforms
 inspired by: https://github.com/pytorch/examples/blob/master/imagenet/main.py
 '''
 class WeightedBCELoss():
-    def __init__(self, weight = 3):
+    def __init__(self, weight = 1):
       self.__w = weight
       
     def __call__(self, pred, target):
@@ -48,7 +48,7 @@ class TSRNetRunner:
         self.__num_traffic_signs    = num_traffic_signs
         self.__train_path           = os.path.join(data_root, 'train')
         self.__val_path             = os.path.join(data_root, 'val')
-        self.__test_path            = os.path.join(data_root, 'test')
+        #self.__test_path            = os.path.join(data_root, 'test')
         self.__train_epochs         = train_epochs
         self.__lr                   = lr
         self.__momentum             = momentum
@@ -187,10 +187,10 @@ class TSRNetRunner:
             val_dataset, batch_size = self.__batch_size, shuffle=True
         )
 
-        test_dataset = dataset.TSRDataset(self.__test_transforms, self.__test_transforms, self.__num_traffic_signs, root_dir = self.__test_path)
-        test_loader  = torch.utils.data.DataLoader(
-            test_dataset, batch_size = self.__batch_size, shuffle=True
-        )
+        #test_dataset = dataset.TSRDataset(self.__test_transforms, self.__test_transforms, self.__num_traffic_signs, root_dir = self.__test_path)
+        #test_loader  = torch.utils.data.DataLoader(
+        #    test_dataset, batch_size = self.__batch_size, shuffle=True
+        #)
 
         optimizer = torch.optim.SGD(self.__net.parameters(), self.__lr, momentum = self.__momentum)
 
