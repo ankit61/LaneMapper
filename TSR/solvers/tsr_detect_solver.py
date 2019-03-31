@@ -40,7 +40,7 @@ class TSRDetectSolver(solver.Solver):
         
         if(bbxs):
             bbx_img = self.__bbx_gen.draw_bbxs(bbxs, cv2_img)
-            cv2.imwrite(self.bbx_img_dir, bbx_img)
+            cv2.imwrite(os.path.join(self.bbx_img_dir, base_filename + '.png'), bbx_img)
             potential_sign_imgs = []
             for bbx in bbxs:
                 potential_sign_imgs.append(pil_img.crop(tuple(bbx)))
