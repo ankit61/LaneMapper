@@ -203,5 +203,6 @@ class TSRNetRunner:
                     'epoch': epoch + 1,
                     'state_dict': self.__net.state_dict()
                 }, 'checkpoint_' + str(epoch) + '.pth')
+                best_acc = acc
         
         self.test(test_loader, 0)
