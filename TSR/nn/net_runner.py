@@ -205,4 +205,4 @@ class TSRNetRunner:
                 }, 'checkpoint_' + str(epoch) + '.pth')
                 best_acc = acc
         
-        self.test(test_loader, 0)
+        #self.test(test_loader, 0)
