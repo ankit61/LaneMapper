@@ -4,6 +4,7 @@ from utils import constants
 from nn import net, dataset
 import bbx_generator, lidar_image_generator
 import torch
+import cv2
 
 class TSRDetectSolver(solver.Solver):
     def __init__(self, base_dir = constants.KITTI_BASE_DIR, date = constants.DATE, drive = constants.DRIVE):
@@ -14,7 +15,10 @@ class TSRDetectSolver(solver.Solver):
         self.__output_file      = open(os.path.join(constants.BASE_DIR, 'TSR/traffic_signs.txt'), 'w')
         classes_file            = open(os.path.join(constants.BASE_DIR, 'TSR/nn/classes.txt'))
         self.__classes          = [classes_file.readline().strip() for _ in range(constants.NUM_TRAFFIC_SIGNS)]
-
+        self.bbx_img_dir        = os.path.join(constants.BASE_DIR, 'Results/TSR_BBx/' + date + '_drive_' + drive)
+        if(not os.path.exists(self.bbx_img_dir)):
+            os.makedirs(self.bbx_img_dir)
+        
     def run_nn(self, img_list):
         nn_dataset = dataset.TSRDataset(single_class_transforms = constants.TEST_TRANSFORMS, multi_class_transforms = constants.TEST_TRANSFORMS, img_list = img_list)
         nn_loader  = torch.utils.data.DataLoader(
@@ -35,6 +39,8 @@ class TSRDetectSolver(solver.Solver):
         pil_img = self.cv2_to_pil(cv2_img)
         
         if(bbxs):
+            bbx_img = self.__bbx_gen.draw_bbxs(bbxs, cv2_img)
+            cv2.imwrite(self.bbx_img_dir, bbx_img)
             potential_sign_imgs = []
             for bbx in bbxs:
                 potential_sign_imgs.append(pil_img.crop(tuple(bbx)))
