@@ -12,9 +12,9 @@ val_dir         = os.path.join(base_dir, 'Datasets/GTSRB/val/')
 test_dir        = os.path.join(base_dir, 'Datasets/GTSRB/test/')
 
 useful_classes   = [0, 1, 2, 3, 4, 5, 13, 25, 14, 22, 43]
-total_train_imgs = 40000
-total_val_imgs   = 0
-total_test_imgs  = 2000
+total_train_imgs = 9
+total_val_imgs   = 1
+total_test_imgs  = 0
 total_imgs       = total_test_imgs + total_val_imgs + total_train_imgs
 
 train_count = 0
@@ -26,26 +26,30 @@ for idx, c in enumerate(useful_classes):
     img_files = os.listdir(cur_dir)
     random.shuffle(img_files)
     img_files = [ f for f in img_files if os.path.splitext(f)[1] in ['.png', '.jpg', '.ppm']]
-    
-    num_train   = int(total_train_imgs / len(useful_classes))
-    num_val     = int(total_val_imgs / len(useful_classes))
-    num_test    = int(total_test_imgs / len(useful_classes))
+    print(len(img_files))
+#    num_train   = int(total_train_imgs / len(useful_classes))
+#    num_val     = int(total_val_imgs / len(useful_classes))
+#    num_test    = int(total_test_imgs / len(useful_classes))
 
     train = []
     val   = []
     test  = []
 
-    if(num_train + num_val + num_test > len(img_files)):
-        num_train   = int(total_train_imgs / total_imgs * len(img_files))
-        num_val     = int(total_val_imgs / total_imgs * len(img_files))
-        num_test    = int(total_test_imgs / total_imgs * len(img_files))
+    num_train   = int(total_train_imgs / total_imgs * len(img_files))
+    num_val     = int(total_val_imgs / total_imgs * len(img_files))
+    num_test    = int(total_test_imgs / total_imgs * len(img_files))
     
     train = img_files[:num_train]
+    
     if(num_val > 0):
-        val   = img_files[num_train:num_train + num_val]
+        val = img_files[num_train:num_train + num_val]
     else:
         val = []
-    test  = img_files[num_train + num_val:]
+
+    if(num_test > 0):
+        test = img_files[num_train + num_val:]
+    else:
+        test = []
 
     for img_file in train:
         shutil.copyfile(os.path.join(cur_dir, img_file), os.path.join(train_dir, str(idx).zfill(2) + '_' + str(train_count).zfill(6) + os.path.splitext(img_files[0])[1]))
