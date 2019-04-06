@@ -13,7 +13,7 @@ class _const:
     KITTI_BASE_DIR      = os.path.join(BASE_DIR, 'Datasets/KITTI')
     RESULTS_BASE_DIR    = os.path.join(BASE_DIR, 'Results')
     DATE                = '2011_09_26'
-    DRIVE               = '0084'
+    DRIVE               = '0056'
     
     #velo_projector
     MIN_X               = 5
@@ -24,7 +24,7 @@ class _const:
     MIN_PTS             = 15
     MIN_INTENSITY_DIFF  = 5
     EXPAND_BY           = 0.5
-    MIN_AREA            = 200
+    MIN_AREA            = 150
     REFLECTIVITY_THRESH = int(0.85 * 255)
     MAX_BBX_DIST        = 20
 
