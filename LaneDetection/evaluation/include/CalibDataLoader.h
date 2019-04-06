@@ -30,7 +30,12 @@ namespace LD {
 					cout << "Entering CalibDataLoader::ReadVariable()" << endl;
 				
 				FILE* stream = fopen(_file.c_str(), "r");
-				char word[80] = "";
+				
+                if(stream == NULL) {
+                    perror(("Failed to open " + _file).c_str());
+                    exit(1);
+                }
+                char word[80] = "";
 				while(!feof(stream) && !ferror(stream) && strcmp(word, (_varName + ":").c_str()) != 0)
 					fscanf(stream, "%s", word);
 				_output = Eigen::MatrixXf(_rows, _cols);

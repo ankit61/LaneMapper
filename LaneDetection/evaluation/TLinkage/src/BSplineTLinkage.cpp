@@ -186,7 +186,12 @@ namespace LD {
 			float x = _coordinates(i, 0);
 			int yStart = m_params1dSpline * j + 1;
 			int zStart = m_params1dSpline * j + zCoeffsStart;
-			j += (x >= _model(yStart) && x <= _model(yStart + 1)) ? 0 : 1;
+			
+			//cout << i << "\t" << x << "\t" << _model(yStart) << "\t" << _model(yStart + 1) << endl;
+
+			if(x > _model(yStart + 1)) 
+				j++;
+			
 			float t = x - _model(yStart);
 			_coordinates(i, 1) += _model(yStart + 2) + t * (_model(yStart + 3) + t * (_model(yStart + 4) + t * _model(yStart + 5)));
 			_coordinates(i, 2) += _model(zStart + 2) + t * (_model(zStart + 3) + t * (_model(zStart + 4) + t * _model(zStart + 5)));
@@ -205,5 +210,23 @@ namespace LD {
 			_model(1 + i) += _shiftBy;
 		}
 	}
+
+    void BSplineTLinkage::GetControlPts(const ArrayXf& _model, ArrayXXf& _ctrlPts) {
+		_ctrlPts = ArrayXXf(3, m_minSamples);
+        //get ys
+        int ctrlIndex = 0;
+        for(int i = 1; i < _model(0); i += m_params1dSpline) {
+            _ctrlPts(0, ctrlIndex) = _model(i);                 // = x
+            _ctrlPts(1, ctrlIndex) = _model(i + 2);             // = y
+            _ctrlPts(2, ctrlIndex) = _model(_model(0) + i + 1); // = z
+            ctrlIndex++;
+        }
+        int i = _model(0) - m_params1dSpline;
+        _ctrlPts(0, ctrlIndex) = _model(i + 1);
+        float t = _model(i + 1) - _model(i);
+        _ctrlPts(1, ctrlIndex) = _model(i + 2) + t * (_model(i + 3) + t * (_model(i + 4) + t * (_model(i + 5))));
+        _ctrlPts(2, ctrlIndex) = _model(_model(0) + i + 1) + t * (_model(_model(0) + i + 2) + t * (_model(_model(0) + i + 3) + t * (_model(_model(0) + i + 4))));
+
+    }
 
 }

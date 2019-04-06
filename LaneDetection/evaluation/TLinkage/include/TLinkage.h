@@ -54,6 +54,8 @@ namespace LD {
 
 			TLinkage(int _minSamples, int _modelParams, string _xmlFile);
 
+			virtual bool IsModelOnRight(const ArrayXf& _model) { return true; }
+
 		protected:
 
 			virtual double Distance(ArrayXf _dataPoint, ArrayXf _model) = 0;
@@ -86,8 +88,6 @@ namespace LD {
 			virtual void RejectOutliers(const ArrayXf& _clusters, const std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices, ArrayXf& _out, const int& _noiseIndex = -1);
 			
 			virtual void FindParallelModels(const vector<ArrayXf>& _models, const ArrayXXf& _data, const ArrayXf& _clusters, const std::unordered_map<int, ulli>& _clusterID2Index, const std::unordered_map<int, vector<ulli> >& _clusterID2PtIndices, vector<ArrayXf>& _refinedModels, ArrayXf& _refinedClusters, const int& _noiseIndex = -1);
-
-			virtual bool IsModelOnRight(const ArrayXf& _model) { return true; }
 
 			virtual void VisualizeModel(ArrayXf& _model, ArrayXXf& _coordinates) {}
 

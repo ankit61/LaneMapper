@@ -17,6 +17,7 @@ namespace LD {
 	
 	void CreateAlglibArray(const Eigen::ArrayXXf _samples, vector<alglib::real_1d_array>& _coordinates);
 
+    int ImgFile2Int(const string &_imgFileName);
 }
 
 #endif

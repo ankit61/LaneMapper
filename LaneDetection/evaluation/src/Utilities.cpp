@@ -81,5 +81,8 @@ namespace LD {
 				_coordinates[i](j) = _samples(j, i);
 	}
 
+    int ImgFile2Int(const string &_imgFileName) {
+        return std::stoi(_imgFileName.substr(0, _imgFileName.size() - 3));
+    }
 	
 }

@@ -17,6 +17,8 @@ namespace LD {
 
 			BSplineTLinkage(string _xmlFile);
 
+		    void GetControlPts(const ArrayXf& _model, ArrayXXf& _ctrlPts);
+
 			ArrayXf ConvertCoeffsTable2Model(alglib::real_2d_array& _yCoeffs, alglib::real_2d_array& _zCoeffs);
 
 			void CreateSplineInterpolants(ArrayXf _model, alglib::spline1dinterpolant& _yOfX, alglib::spline1dinterpolant& _zOfX);

@@ -74,7 +74,8 @@ namespace LD {
 			m_imgBaseName = basename(const_cast<char*>(line.c_str()));
 			cv::Mat inputImg, segImg;
 			inputImg = cv::imread(m_dataRoot + "/" + line);
-			CHECK(!inputImg.empty()) << "could not open or find " << m_dataRoot + "/" + line;
+			if(!inputImg.empty())
+				throw runtime_error("could not open or find " + m_dataRoot + "/" + line);
 			if(m_debug)
 				cout << "Successfully opened " << line << endl;
 		

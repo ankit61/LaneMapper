@@ -1,14 +1,15 @@
 cmake_minimum_required(VERSION 3.5)
 project(LaneDetection)
 
-find_package( OpenCV REQUIRED )
+find_package(OpenCV 2.4.9 REQUIRED)
+#find_package( OpenCV REQUIRED )
 find_package(Boost COMPONENTS regex system filesystem REQUIRED)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_BUILD_TYPE Debug)
 
-set(ICNET_ROOT "/home/ankit61/Research/Autonomous-Driving-Research/LaneDetection")
-set(PUGIXML_ROOT "/home/ankit61/Research/pugixml-1.9")
-set(ALGLIB_ROOT "/home/ankit61/Research/ALGLIB")
+set(ICNET_ROOT "/home/netbot/Research/ICNet/")
+set(PUGIXML_ROOT "/home/netbot/Research/pugixml-1.9")
+set(ALGLIB_ROOT "/home/netbot/Research/ALGLIB")
 
 # include directory
 include_directories(
@@ -75,6 +76,7 @@ add_executable(
 	src/PointsVisualizer.cpp
 	src/FloodFill.cpp
 	src/Utilities.cpp
+	src/MapGenerator.cpp
 	DBScan/DBScan.cpp
 	${PUGIXML_ROOT}/src/pugixml.cpp
 	${ALGLIB_ROOT}/src/alglibinternal.cpp
