@@ -12,8 +12,8 @@ class _const:
     BASE_DIR            = str(Path(os.path.realpath(__file__)).parents[2])
     KITTI_BASE_DIR      = os.path.join(BASE_DIR, 'Datasets/KITTI')
     RESULTS_BASE_DIR    = os.path.join(BASE_DIR, 'Results')
-    DATE                = '2011_09_29'
-    DRIVE               = '0004'
+    DATE                = '2011_09_26'
+    DRIVE               = '0084'
     
     #velo_projector
     MIN_X               = 5
@@ -25,7 +25,7 @@ class _const:
     MIN_INTENSITY_DIFF  = 5
     EXPAND_BY           = 0.5
     MIN_AREA            = 200
-    REFLECTIVITY_THRESH = int(0.6 * 255)
+    REFLECTIVITY_THRESH = int(0.85 * 255)
     MAX_BBX_DIST        = 20
 
     #map_gen_solver
