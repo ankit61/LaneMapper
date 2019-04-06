@@ -34,22 +34,25 @@ class TSRDetectSolver(solver.Solver):
         return pred_ts
 
     def solve(self, cv2_img, velo, base_filename):
-        lidar_img = self.__lidar_img_gen.generate_refined(velo, cv2_img.shape)
-        bbxs = self.__bbx_gen.get_bbxs(lidar_img)
-        pil_img = self.cv2_to_pil(cv2_img)
-        
-        if(bbxs):
-            bbx_img = self.__bbx_gen.draw_bbxs(bbxs, cv2_img)
-            cv2.imwrite(os.path.join(self.bbx_img_dir, base_filename + '.png'), bbx_img)
-            potential_sign_imgs = []
-            for bbx in bbxs:
-                potential_sign_imgs.append(pil_img.crop(tuple(bbx)))
-     
-            pred_ts = self.run_nn(potential_sign_imgs)
+        try:
+            lidar_img = self.__lidar_img_gen.generate_refined(velo, cv2_img.shape)
+            bbxs = self.__bbx_gen.get_bbxs(lidar_img)
+            pil_img = self.cv2_to_pil(cv2_img)
+            
+            if(bbxs):
+                bbx_img = self.__bbx_gen.draw_bbxs(bbxs, cv2_img)
+                cv2.imwrite(os.path.join(self.bbx_img_dir, base_filename + '.png'), bbx_img)
+                potential_sign_imgs = []
+                for bbx in bbxs:
+                    potential_sign_imgs.append(pil_img.crop(tuple(bbx)))
+         
+                pred_ts = self.run_nn(potential_sign_imgs)
 
-            if(pred_ts):
-                self.__output_file.write(base_filename + ': ')
-                for ts in pred_ts:
-                    self.__output_file.write('(' + str(self.__classes[ts]) + ', ' + str(pred_ts[ts]) + ')\t')
-                self.__output_file.write('\n')
-                self.__output_file.flush()
+                if(pred_ts):
+                    self.__output_file.write(base_filename + ': ')
+                    for ts in pred_ts:
+                        self.__output_file.write('(' + str(self.__classes[ts]) + ', ' + str(pred_ts[ts]) + ')\t')
+                    self.__output_file.write('\n')
+                    self.__output_file.flush()
+        except bbx_generator.BbxGenerator.NoClustersFound:
+            return
