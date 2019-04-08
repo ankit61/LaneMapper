@@ -10,4 +10,4 @@ Follow this [link](https://drive.google.com/drive/u/1/folders/1-mXBFJHg66TRby6Ll
 
 ## Questions
 
-Please contact 'ankit61@tamu.edu'
+Please contact ankit61@tamu.edu or start an issue
